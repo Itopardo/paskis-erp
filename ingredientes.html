@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis ERP - Ingredientes</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; padding: 24px 16px 48px; }
+    .top { max-width: 960px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .top img { height: 70px; }
+    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; min-width: 80px; }
+    h1 { color: #fff; text-align: center; letter-spacing: 3px; font-size: 24px; margin-bottom: 20px; }
+    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 960px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    form { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; }
+    label small { font-weight: 500; letter-spacing: 0; color: #b07790; }
+    input, select { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; background: #fff; font-family: inherit; }
+    input:focus, select:focus { border-color: #e8508a; }
+    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; font-family: inherit; }
+    .btn { background: #e8508a; color: #fff; padding: 11px 20px; font-size: 14px; letter-spacing: 1px; }
+    .btn:hover { background: #d43f78; }
+    .cancel { background: #f5e1ea; color: #a8325f; padding: 11px 16px; font-size: 14px; display: none; }
+    .acciones { display: flex; gap: 8px; }
+    @media (max-width: 760px) { form { grid-template-columns: repeat(3, minmax(0,1fr)); } form label:first-child, .acciones { grid-column: 1 / -1; } .acciones .btn { flex: 1; } }
+    .buscar { margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; white-space: nowrap; }
+    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ico { background: none; padding: 4px 6px; color: #e8508a; font-size: 13px; }
+    .ico:hover { text-decoration: underline; }
+    .vacio { text-align: center; padding: 24px; color: #b07790; }
+    .resumen { margin-top: 12px; font-size: 13px; color: #b07790; text-align: right; }
+    .tabla-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a class="volver" href="inventario.html">← Inventario</a>
+    <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
+    <span style="min-width:80px"></span>
+  </div>
+  <h1>INGREDIENTES</h1>
+
+  <div class="card">
+    <form id="form">
+      <label>INGREDIENTE <input id="nombre" required placeholder="Ej: Harina"></label>
+      <label>CANTIDAD <input id="cantidad" type="number" min="0" step="any" required placeholder="Ej: 1"></label>
+      <label>UNIDAD <select id="unidad"></select></label>
+      <label><span>COSTO <small>(de esa cantidad)</small></span><input id="costo" type="number" min="0" step="1" required placeholder="$"></label>
+      <div class="acciones">
+        <button type="button" class="cancel" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn" id="guardar">AGREGAR</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <input class="buscar" id="buscar" placeholder="Buscar ingrediente...">
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>INGREDIENTE</th><th class="num">CANTIDAD</th><th>UNIDAD</th><th class="num">COSTO</th><th class="num">COSTO POR UNIDAD</th><th></th></tr></thead>
+        <tbody id="lista"></tbody>
+      </table>
+    </div>
+    <div class="resumen" id="resumen"></div>
+  </div>
+
+<script>
+  const KI = 'paskis_ingredientes';
+  const $ = id => document.getElementById(id);
+  const clp = n => '$' + (n < 10 ? Number(n.toFixed(2)) : Math.round(n)).toLocaleString('es-CL');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const NOMBRE_UNIDAD = { g: 'g', kg: 'kg', ml: 'ml', l: 'L', un: 'unidad' };
+  $('unidad').innerHTML = Object.keys(NOMBRE_UNIDAD).map(u => `<option value="${u}">${NOMBRE_UNIDAD[u]}</option>`).join('');
+  let ingredientes = [];
+  try { ingredientes = JSON.parse(localStorage.getItem(KI)) || []; } catch (e) {}
+  const guardar = () => { try { localStorage.setItem(KI, JSON.stringify(ingredientes)); } catch (e) { alert('No se pudo guardar en este navegador.'); } };
+  let editando = null;
+
+  // Costo por unidad mostrado de forma legible: por kg / por L para masa y volumen
+  function costoUnit(i) {
+    if (!(i.cantidad > 0)) return '—';
+    const porBase = i.costo / i.cantidad;
+    if (i.unidad === 'g') return clp(porBase * 1000) + ' / kg';
+    if (i.unidad === 'ml') return clp(porBase * 1000) + ' / L';
+    return clp(porBase) + ' / ' + NOMBRE_UNIDAD[i.unidad];
+  }
+
+  function render() {
+    const q = $('buscar').value.trim().toLowerCase();
+    const filas = ingredientes.filter(i => i.nombre.toLowerCase().includes(q));
+    $('lista').innerHTML = filas.length ? filas.map(i => `<tr>
+      <td>${esc(i.nombre)}</td>
+      <td class="num">${Number(i.cantidad).toLocaleString('es-CL')}</td>
+      <td>${NOMBRE_UNIDAD[i.unidad]}</td>
+      <td class="num">${clp(i.costo)}</td>
+      <td class="num">${costoUnit(i)}</td>
+      <td class="num"><button class="ico" onclick="editar('${i.id}')">Editar</button><button class="ico" onclick="borrar('${i.id}')">Eliminar</button></td>
+    </tr>`).join('') : `<tr><td colspan="6" class="vacio">${ingredientes.length ? 'Sin resultados' : 'Aún no hay ingredientes. Agrega el primero arriba.'}</td></tr>`;
+    $('resumen').textContent = ingredientes.length ? `${ingredientes.length} ingrediente${ingredientes.length > 1 ? 's' : ''}` : '';
+  }
+  function limpiar() { editando = null; $('form').reset(); $('guardar').textContent = 'AGREGAR'; $('cancelar').style.display = 'none'; }
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const d = { nombre: $('nombre').value.trim(), cantidad: Number($('cantidad').value), unidad: $('unidad').value, costo: Number($('costo').value) };
+    if (!d.nombre) return;
+    const dup = ingredientes.find(i => i.nombre.toLowerCase() === d.nombre.toLowerCase() && i.id !== editando);
+    if (dup) { alert(`"${dup.nombre}" ya existe. Usa Editar para cambiarlo.`); return; }
+    if (editando) Object.assign(ingredientes.find(i => i.id === editando), d);
+    else ingredientes.unshift({ id: Date.now().toString(36), ...d });
+    guardar(); limpiar(); render(); $('nombre').focus();
+  });
+  window.editar = id => {
+    const i = ingredientes.find(x => x.id === id); if (!i) return;
+    editando = id; $('nombre').value = i.nombre; $('cantidad').value = i.cantidad; $('unidad').value = i.unidad; $('costo').value = i.costo;
+    $('guardar').textContent = 'GUARDAR'; $('cancelar').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' }); $('nombre').focus();
+  };
+  window.borrar = id => {
+    const i = ingredientes.find(x => x.id === id);
+    if (i && confirm(`¿Eliminar "${i.nombre}"? Las recetas que lo usan pasarán a costo manual.`)) { ingredientes = ingredientes.filter(x => x.id !== id); guardar(); if (editando === id) limpiar(); render(); }
+  };
+  $('cancelar').addEventListener('click', limpiar);
+  $('buscar').addEventListener('input', render);
+  render();
+</script>
+</body>
+</html>
