@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis ERP - Productos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #ff82b0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #4a2236;
+      padding: 24px 16px 48px;
+    }
+    .top { max-width: 900px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .top img { height: 70px; }
+    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; }
+    h1 { color: #fff; text-align: center; letter-spacing: 3px; font-size: 24px; margin-bottom: 20px; }
+    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 900px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    form { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; }
+    input { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; }
+    input:focus { border-color: #e8508a; }
+    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; }
+    .btn { background: #e8508a; color: #fff; padding: 11px 20px; font-size: 14px; letter-spacing: 1px; }
+    .btn:hover { background: #d43f78; }
+    .cancel { background: #f5e1ea; color: #a8325f; padding: 11px 16px; font-size: 14px; display: none; }
+    .acciones { display: flex; gap: 8px; }
+    @media (max-width: 640px) { form { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } form label:first-child { grid-column: 1 / -1; } .acciones { grid-column: 1 / -1; } .acciones .btn { flex: 1; } }
+    .buscar { width: 100%; margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; }
+    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .neg { color: #c0392b; }
+    .ico { background: none; padding: 4px 6px; color: #e8508a; font-size: 13px; }
+    .ico:hover { text-decoration: underline; }
+    .vacio { text-align: center; padding: 24px; color: #b07790; }
+    .resumen { margin-top: 12px; font-size: 13px; color: #b07790; text-align: right; }
+    .tabla-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a class="volver" href="menu.html">← Menú</a>
+    <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
+    <span style="width:60px"></span>
+  </div>
+  <h1>PRODUCTOS</h1>
+
+  <div class="card">
+    <form id="form">
+      <label>NOMBRE PRODUCTO <input id="nombre" required placeholder="Ej: Torta de chocolate"></label>
+      <label>VALOR UNITARIO <input id="valor" type="number" min="0" step="1" required placeholder="$"></label>
+      <label>COSTO <input id="costo" type="number" min="0" step="1" required placeholder="$"></label>
+      <div class="acciones">
+        <button type="button" class="cancel" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn" id="guardar">AGREGAR</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <input class="buscar" id="buscar" placeholder="Buscar producto...">
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>PRODUCTO</th><th class="num">VALOR UNITARIO</th><th class="num">COSTO</th><th class="num">GANANCIA</th><th class="num">MARGEN</th><th></th></tr></thead>
+        <tbody id="lista"></tbody>
+      </table>
+    </div>
+    <div class="resumen" id="resumen"></div>
+  </div>
+
+<script>
+  const KEY = 'paskis_productos';
+  const $ = id => document.getElementById(id);
+  const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
+  let productos = [];
+  let editando = null;
+
+  function cargar() { try { productos = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { productos = []; } }
+  function guardar() { try { localStorage.setItem(KEY, JSON.stringify(productos)); } catch (e) { alert('No se pudo guardar en este navegador.'); } }
+  const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function render() {
+    const q = $('buscar').value.trim().toLowerCase();
+    const filas = productos.filter(p => p.nombre.toLowerCase().includes(q));
+    $('lista').innerHTML = filas.length ? filas.map(p => {
+      const gan = p.valor - p.costo;
+      const margen = p.valor > 0 ? (gan / p.valor * 100) : 0;
+      return `<tr>
+        <td>${esc(p.nombre)}</td>
+        <td class="num">${clp(p.valor)}</td>
+        <td class="num">${clp(p.costo)}</td>
+        <td class="num ${gan < 0 ? 'neg' : ''}">${clp(gan)}</td>
+        <td class="num ${gan < 0 ? 'neg' : ''}">${margen.toFixed(0)}%</td>
+        <td class="num"><button class="ico" onclick="editar('${p.id}')">Editar</button><button class="ico" onclick="borrar('${p.id}')">Eliminar</button></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="6" class="vacio">${productos.length ? 'Sin resultados' : 'Aún no hay productos. Agrega el primero arriba.'}</td></tr>`;
+    $('resumen').textContent = productos.length ? `${productos.length} producto${productos.length > 1 ? 's' : ''}` : '';
+  }
+
+  function limpiar() {
+    editando = null; $('form').reset();
+    $('guardar').textContent = 'AGREGAR'; $('cancelar').style.display = 'none';
+  }
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const datos = { nombre: $('nombre').value.trim(), valor: Number($('valor').value), costo: Number($('costo').value) };
+    if (!datos.nombre) return;
+    if (editando) Object.assign(productos.find(p => p.id === editando), datos);
+    else productos.unshift({ id: Date.now().toString(36), ...datos });
+    guardar(); limpiar(); render(); $('nombre').focus();
+  });
+
+  window.editar = id => {
+    const p = productos.find(x => x.id === id); if (!p) return;
+    editando = id; $('nombre').value = p.nombre; $('valor').value = p.valor; $('costo').value = p.costo;
+    $('guardar').textContent = 'GUARDAR'; $('cancelar').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' }); $('nombre').focus();
+  };
+  window.borrar = id => {
+    const p = productos.find(x => x.id === id);
+    if (p && confirm(`¿Eliminar "${p.nombre}"?`)) { productos = productos.filter(x => x.id !== id); guardar(); if (editando === id) limpiar(); render(); }
+  };
+  $('cancelar').addEventListener('click', limpiar);
+  $('buscar').addEventListener('input', render);
+
+  cargar(); render();
+</script>
+</body>
+</html>
