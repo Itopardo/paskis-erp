@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis ERP - Ventas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; padding: 24px 16px 48px; }
+    .top { max-width: 960px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .top img { height: 70px; }
+    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; min-width: 60px; }
+    h1 { color: #fff; text-align: center; letter-spacing: 3px; font-size: 24px; margin-bottom: 20px; }
+    h2 { color: #e8508a; font-size: 14px; letter-spacing: 1.5px; margin-bottom: 14px; }
+    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 960px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    .fila { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 640px) { .fila { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .fila label:nth-child(2) { grid-column: 1 / -1; order: 3; } }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; }
+    label small { font-weight: 500; letter-spacing: 0; color: #b07790; }
+    input, select { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; background: #fff; font-family: inherit; }
+    input:focus, select:focus { border-color: #e8508a; }
+    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; font-family: inherit; }
+    .btn { background: #e8508a; color: #fff; padding: 12px 22px; font-size: 14px; letter-spacing: 1px; }
+    .btn:hover { background: #d43f78; }
+    .btn:disabled { opacity: .6; cursor: wait; }
+    .btn2 { background: #f5e1ea; color: #a8325f; padding: 10px 16px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; white-space: nowrap; }
+    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; vertical-align: middle; }
+    .items td { padding: 6px 4px; border: 0; }
+    .items th { padding: 6px 4px; }
+    .items input, .items select { padding: 9px 10px; font-size: 14px; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    @media (max-width: 640px) {
+      .items thead { display: none; }
+      .items tr { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto auto; gap: 8px; align-items: end; padding: 10px 0; border-bottom: 1px solid #fbe3ec; }
+      .items td { padding: 0; }
+      .items td:first-child { grid-column: 1 / -1; }
+      .items td[data-l]::before { content: attr(data-l); display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #e8508a; margin-bottom: 4px; }
+      .items td.num { padding-bottom: 10px; }
+    }
+    .quitar { background: none; color: #c9a3b5; font-size: 18px; padding: 4px 8px; }
+    .quitar:hover { color: #c0392b; }
+    .aviso-stock { font-size: 11px; color: #c0392b; display: block; margin-top: 2px; }
+    .pie { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 2px solid #f5c2d6; }
+    .total { font-size: 20px; font-weight: 800; color: #e8508a; }
+    .total span { font-size: 13px; color: #b07790; font-weight: 600; letter-spacing: 1px; margin-right: 8px; }
+    .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a2236; font-weight: 500; letter-spacing: 0; flex-direction: row; }
+    .check input { width: 18px; height: 18px; accent-color: #e8508a; }
+    .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+    .chip { background: #fde4ee; color: #a8325f; padding: 8px 14px; border-radius: 999px; font-size: 13px; }
+    .chip.activo { background: #e8508a; color: #fff; }
+    .filtros input { flex: 1; min-width: 160px; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .kpi { background: #fff5f9; border-radius: 12px; padding: 12px 14px; }
+    .kpi div { font-size: 11px; letter-spacing: 1px; color: #b07790; font-weight: 700; }
+    .kpi b { font-size: 20px; color: #4a2236; font-variant-numeric: tabular-nums; }
+    @media (max-width: 640px) { .kpis { grid-template-columns: 1fr; } }
+    .ico { background: none; padding: 4px 6px; color: #e8508a; font-size: 13px; }
+    .ico:hover { text-decoration: underline; }
+    .detalle { color: #8a5a70; font-size: 13px; }
+    .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #f1f1f1; color: #777; }
+    .muted { color: #c9a3b5; }
+    .neg { color: #c0392b; }
+    .vacio { text-align: center; padding: 24px; color: #b07790; }
+    .tabla-wrap { overflow-x: auto; }
+    .ok { background: #e8f5e9; color: #2e7d32; border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-top: 12px; display: none; }
+    body.cargando { visibility: hidden; }
+  </style>
+</head>
+<body class="cargando">
+  <div class="top">
+    <a class="volver" href="menu.html">← Menú</a>
+    <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
+    <span style="min-width:60px"></span>
+  </div>
+  <h1>VENTAS</h1>
+
+  <div class="card">
+    <h2>NUEVA VENTA</h2>
+    <div class="fila">
+      <label>FECHA <input id="fecha" type="date"></label>
+      <label><span>CLIENTE <small>(opcional)</small></span><input id="cliente" placeholder="Ej: María González"></label>
+      <label>MEDIO DE PAGO
+        <select id="pago">
+          <option>Efectivo</option><option>Transferencia</option><option>Débito</option><option>Crédito</option><option>Otro</option>
+        </select>
+      </label>
+    </div>
+    <div class="tabla-wrap">
+      <table class="items">
+        <thead><tr><th style="width:42%">PRODUCTO</th><th style="width:14%">CANTIDAD</th><th style="width:18%">PRECIO UNIT.</th><th class="num" style="width:20%">SUBTOTAL</th><th></th></tr></thead>
+        <tbody id="items"></tbody>
+      </table>
+    </div>
+    <button type="button" class="btn2" id="agregar" style="margin-top:10px">+ Agregar producto</button>
+    <div class="pie">
+      <label class="check"><input type="checkbox" id="descontar" checked> Descontar del stock de productos terminados</label>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div class="total"><span>TOTAL</span><b id="total">$0</b></div>
+        <button type="button" class="btn" id="registrar">REGISTRAR VENTA</button>
+      </div>
+    </div>
+    <div class="ok" id="ok"></div>
+  </div>
+
+  <div class="card">
+    <h2>HISTORIAL DE VENTAS</h2>
+    <div class="filtros" id="filtros">
+      <button class="chip activo" data-f="hoy">Hoy</button>
+      <button class="chip" data-f="semana">Últimos 7 días</button>
+      <button class="chip" data-f="mes">Este mes</button>
+      <button class="chip" data-f="todo">Todo</button>
+      <input id="buscar" placeholder="Buscar cliente o producto...">
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div>VENTAS</div><b id="kCant">0</b></div>
+      <div class="kpi"><div>TOTAL VENDIDO</div><b id="kTotal">$0</b></div>
+      <div class="kpi"><div>GANANCIA ESTIMADA</div><b id="kGan">$0</b></div>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>FECHA</th><th>CLIENTE</th><th>DETALLE</th><th>PAGO</th><th class="num">TOTAL</th><th class="num">GANANCIA</th><th></th></tr></thead>
+        <tbody id="lista"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script type="module">
+  import { requerirSesion, escuchar, guardar, borrar as borrarDoc, sumar, nuevoId } from './datos.js';
+  const $ = id => document.getElementById(id);
+  const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const hoyISO = () => new Date().toLocaleDateString('sv-SE');  // AAAA-MM-DD en hora local
+  const fechaCL = iso => { const [a, m, d] = iso.split('-'); return `${d}-${m}-${a}`; };
+
+  let productos = [], ingredientes = [], stock = {}, ventas = [], cargado = false;
+  let items = [];
+  let filtro = 'hoy';
+  let usuario = null;
+
+  // Costo de producto (receta o manual), igual que en Productos
+  const UNIDADES = { g: ['masa', 1], kg: ['masa', 1000], ml: ['vol', 1], l: ['vol', 1000], un: ['un', 1] };
+  function convertir(c, de, a) { const A = UNIDADES[de], B = UNIDADES[a]; return (!A || !B || A[0] !== B[0]) ? null : c * A[1] / B[1]; }
+  function costoLinea(l) {
+    const ing = ingredientes.find(i => i.nombre.trim().toLowerCase() === (l.nombre || '').trim().toLowerCase());
+    if (ing && ing.cantidad > 0) { const c = convertir(Number(l.cantidad) || 0, l.unidad, ing.unidad); if (c !== null) return c * ing.costo / ing.cantidad; }
+    return Number(l.costo) || 0;
+  }
+  function costoProducto(p) {
+    if (!p) return null;
+    if (p.receta && p.receta.lineas && p.receta.lineas.length) return p.receta.lineas.reduce((s, l) => s + costoLinea(l), 0) / (p.receta.rinde || 1);
+    if (p.costo !== null && p.costo !== undefined && p.costo !== '') return Number(p.costo);
+    return null;
+  }
+
+  // ---------- Nueva venta ----------
+  const nuevaLinea = () => ({ productoId: '', cantidad: 1, precio: '' });
+  function opcionesProductos(sel) {
+    const orden = [...productos].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    return '<option value="">Selecciona...</option>' + orden.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('');
+  }
+  function renderItems() {
+    if (!productos.length) {
+      $('items').innerHTML = `<tr><td colspan="5" class="vacio">Primero crea tus productos en <a href="productos.html" style="color:#e8508a">Productos</a>.</td></tr>`;
+      totalVenta(); return;
+    }
+    $('items').innerHTML = items.map((it, i) => `<tr>
+      <td><select onchange="elegir(${i},this.value)">${opcionesProductos(it.productoId)}</select><span class="aviso-stock" id="av_${i}"></span></td>
+      <td data-l="CANTIDAD"><input type="number" min="1" step="1" value="${it.cantidad}" oninput="cambiar(${i},'cantidad',this.value)"></td>
+      <td data-l="PRECIO UNIT."><input type="number" min="0" step="1" value="${it.precio}" placeholder="$" oninput="cambiar(${i},'precio',this.value)"></td>
+      <td class="num" id="sub_${i}"></td>
+      <td><button type="button" class="quitar" title="Quitar" onclick="quitarItem(${i})">×</button></td>
+    </tr>`).join('');
+    items.forEach((_, i) => pintarLinea(i));
+    totalVenta();
+  }
+  function pintarLinea(i) {
+    const it = items[i];
+    $('sub_' + i).textContent = clp((Number(it.cantidad) || 0) * (Number(it.precio) || 0));
+    const av = $('av_' + i);
+    if (it.productoId && stock[it.productoId] !== undefined && $('descontar').checked && Number(it.cantidad) > stock[it.productoId]) av.textContent = `Stock disponible: ${stock[it.productoId]}`;
+    else av.textContent = '';
+  }
+  function totalVenta() {
+    const t = items.reduce((s, it) => s + (Number(it.cantidad) || 0) * (Number(it.precio) || 0), 0);
+    $('total').textContent = clp(t);
+    return t;
+  }
+  window.elegir = (i, id) => {
+    items[i].productoId = id;
+    const p = productos.find(x => x.id === id);
+    items[i].precio = p ? p.valor : '';
+    renderItems();
+  };
+  window.cambiar = (i, campo, v) => { items[i][campo] = v; pintarLinea(i); totalVenta(); };
+  window.quitarItem = i => { items.splice(i, 1); if (!items.length) items.push(nuevaLinea()); renderItems(); };
+  $('agregar').addEventListener('click', () => { items.push(nuevaLinea()); renderItems(); });
+  $('descontar').addEventListener('change', () => items.forEach((_, i) => pintarLinea(i)));
+
+  function limpiarVenta() {
+    items = [nuevaLinea()];
+    $('cliente').value = ''; $('fecha').value = hoyISO(); $('pago').selectedIndex = 0;
+    renderItems();
+  }
+
+  $('registrar').addEventListener('click', async () => {
+    const validos = items.filter(it => it.productoId && Number(it.cantidad) > 0);
+    if (!validos.length) { alert('Agrega al menos un producto con su cantidad.'); return; }
+    if (!$('fecha').value) { alert('Ingresa la fecha de la venta.'); return; }
+    const descontar = $('descontar').checked;
+    if (descontar) {
+      const faltan = validos.filter(it => stock[it.productoId] !== undefined && Number(it.cantidad) > stock[it.productoId]);
+      if (faltan.length && !confirm('Hay productos con menos stock del que estás vendiendo. ¿Registrar la venta igual? (el stock quedará negativo)')) return;
+    }
+    const lineas = validos.map(it => {
+      const p = productos.find(x => x.id === it.productoId);
+      const costo = costoProducto(p);
+      return { productoId: it.productoId, nombre: p ? p.nombre : '', cantidad: Math.round(Number(it.cantidad)), precio: Number(it.precio) || 0, costo: costo === null ? null : Math.round(costo) };
+    });
+    const total = lineas.reduce((s, l) => s + l.cantidad * l.precio, 0);
+    const conCosto = lineas.every(l => l.costo !== null);
+    const costoTotal = lineas.reduce((s, l) => s + l.cantidad * (l.costo || 0), 0);
+    // Solo se descuenta de productos que tienen stock registrado
+    const descontados = descontar ? lineas.filter(l => stock[l.productoId] !== undefined).map(l => ({ productoId: l.productoId, cantidad: l.cantidad })) : [];
+    const venta = {
+      id: nuevoId(), fecha: $('fecha').value, cliente: $('cliente').value.trim(), pago: $('pago').value,
+      lineas, total, costoTotal, conCosto, descontados, usuario: usuario ? usuario.email : '', creado: Date.now()
+    };
+    $('registrar').disabled = true;
+    try {
+      await guardar('ventas', venta);
+      for (const d of descontados) await sumar('stock', d.productoId, 'cantidad', -d.cantidad);
+      $('ok').style.display = 'block';
+      $('ok').textContent = `Venta registrada por ${clp(total)}` + (descontados.length ? ' y descontada del stock.' : '.');
+      setTimeout(() => { $('ok').style.display = 'none'; }, 4000);
+      limpiarVenta();
+    } finally { $('registrar').disabled = false; }
+  });
+
+  // ---------- Historial ----------
+  function enRango(f) {
+    const hoy = hoyISO();
+    if (filtro === 'hoy') return f === hoy;
+    if (filtro === 'semana') { const d = new Date(); d.setDate(d.getDate() - 6); return f >= d.toLocaleDateString('sv-SE') && f <= hoy; }
+    if (filtro === 'mes') return f.slice(0, 7) === hoy.slice(0, 7);
+    return true;
+  }
+  function renderHistorial() {
+    if (!cargado) { $('lista').innerHTML = '<tr><td colspan="7" class="vacio">Cargando...</td></tr>'; return; }
+    const q = $('buscar').value.trim().toLowerCase();
+    const filas = ventas.filter(v => enRango(v.fecha) && (!q || (v.cliente || '').toLowerCase().includes(q) || v.lineas.some(l => l.nombre.toLowerCase().includes(q))));
+    let tTotal = 0, tGan = 0;
+    $('lista').innerHTML = filas.length ? filas.map(v => {
+      const gan = v.total - v.costoTotal;
+      tTotal += v.total; tGan += gan;
+      const detalle = v.lineas.map(l => `${l.cantidad} × ${esc(l.nombre)}`).join(', ');
+      return `<tr>
+        <td style="white-space:nowrap">${fechaCL(v.fecha)}</td>
+        <td>${v.cliente ? esc(v.cliente) : '<span class="muted">—</span>'}</td>
+        <td class="detalle">${detalle}</td>
+        <td><span class="tag">${esc(v.pago)}</span></td>
+        <td class="num"><b>${clp(v.total)}</b></td>
+        <td class="num ${gan < 0 ? 'neg' : ''}">${clp(gan)}${v.conCosto ? '' : ' <span class="muted" title="Algunos productos no tienen costo">*</span>'}</td>
+        <td class="num"><button class="ico" onclick="eliminarVenta('${v.id}')">Eliminar</button></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="7" class="vacio">${ventas.length ? 'No hay ventas en este período.' : 'Aún no hay ventas registradas.'}</td></tr>`;
+    $('kCant').textContent = filas.length.toLocaleString('es-CL');
+    $('kTotal').textContent = clp(tTotal);
+    $('kGan').textContent = clp(tGan);
+  }
+  $('filtros').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    filtro = b.dataset.f;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c === b));
+    renderHistorial();
+  });
+  $('buscar').addEventListener('input', renderHistorial);
+
+  window.eliminarVenta = async id => {
+    const v = ventas.find(x => x.id === id); if (!v) return;
+    if (!confirm(`¿Eliminar la venta del ${fechaCL(v.fecha)} por ${clp(v.total)}?`)) return;
+    const devolver = (v.descontados || []).length && confirm('¿Devolver los productos de esta venta al stock?');
+    await borrarDoc('ventas', id);
+    if (devolver) for (const d of v.descontados) await sumar('stock', d.productoId, 'cantidad', d.cantidad);
+  };
+
+  // ---------- Carga ----------
+  usuario = await requerirSesion();
+  document.body.classList.remove('cargando');
+  limpiarVenta();
+  renderHistorial();
+  escuchar('productos', d => { productos = d; renderItems(); });
+  escuchar('ingredientes', d => { ingredientes = d; });
+  escuchar('stock', d => { stock = {}; d.forEach(x => { stock[x.id] = Number(x.cantidad) || 0; }); items.forEach((_, i) => { if ($('av_' + i)) pintarLinea(i); }); });
+  escuchar('ventas', d => { ventas = d.sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.creado || 0) - (a.creado || 0)); cargado = true; renderHistorial(); });
+</script>
+</body>
+</html>
