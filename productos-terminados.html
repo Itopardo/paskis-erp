@@ -42,12 +42,14 @@
     body.cargando { visibility: hidden; }
     .totales { display: flex; justify-content: flex-end; gap: 24px; flex-wrap: wrap; margin-top: 14px; font-size: 14px; }
     .totales b { color: #e8508a; }
+    a.logo-link { display: inline-block; line-height: 0; transition: transform .15s; }
+    a.logo-link:hover { transform: scale(1.04); }
   </style>
 </head>
 <body class="cargando">
   <div class="top">
     <a class="volver" href="inventario.html">← Inventario</a>
-    <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
+    <a href="menu.html" class="logo-link" title="Ir al menú principal"><img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis"></a>
     <span style="min-width:80px"></span>
   </div>
   <h1>PRODUCTOS TERMINADOS</h1>
