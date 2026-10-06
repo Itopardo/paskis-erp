@@ -64,7 +64,9 @@
     .neg { color: #c0392b; }
     .vacio { text-align: center; padding: 24px; color: #b07790; }
     .tabla-wrap { overflow-x: auto; }
-    .ok { background: #e8f5e9; color: #2e7d32; border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-top: 12px; display: none; }
+    .ok { background: #e8f5e9; color: #2e7d32; border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-top: 12px; display: none; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .btn-comp { background: #e8508a; color: #fff; text-decoration: none; font-weight: 700; padding: 8px 14px; border-radius: 999px; font-size: 13px; white-space: nowrap; }
+    .btn-comp:hover { background: #d43f78; }
     body.cargando { visibility: hidden; }
   </style>
 </head>
@@ -231,9 +233,9 @@
     try {
       await guardar('ventas', venta);
       for (const d of descontados) await sumar('stock', d.productoId, 'cantidad', -d.cantidad);
-      $('ok').style.display = 'block';
-      $('ok').textContent = `Venta registrada por ${clp(total)}` + (descontados.length ? ' y descontada del stock.' : '.');
-      setTimeout(() => { $('ok').style.display = 'none'; }, 4000);
+      $('ok').style.display = 'flex';
+      $('ok').innerHTML = `<span>Venta registrada por ${clp(total)}${descontados.length ? ' y descontada del stock' : ''}.</span><a class="btn-comp" href="comprobante.html?id=${venta.id}&imprimir=1" target="_blank">🧾 Imprimir comprobante</a>`;
+      clearTimeout(window._okT); window._okT = setTimeout(() => { $('ok').style.display = 'none'; }, 20000);
       limpiarVenta();
     } finally { $('registrar').disabled = false; }
   });
@@ -262,7 +264,7 @@
         <td><span class="tag">${esc(v.pago)}</span></td>
         <td class="num"><b>${clp(v.total)}</b></td>
         <td class="num ${gan < 0 ? 'neg' : ''}">${clp(gan)}${v.conCosto ? '' : ' <span class="muted" title="Algunos productos no tienen costo">*</span>'}</td>
-        <td class="num"><button class="ico" onclick="eliminarVenta('${v.id}')">Eliminar</button></td>
+        <td class="num"><a class="ico" href="comprobante.html?id=${v.id}" target="_blank" style="text-decoration:none">Comprobante</a><button class="ico" onclick="eliminarVenta('${v.id}')">Eliminar</button></td>
       </tr>`;
     }).join('') : `<tr><td colspan="7" class="vacio">${ventas.length ? 'No hay ventas en este período.' : 'Aún no hay ventas registradas.'}</td></tr>`;
     $('kCant').textContent = filas.length.toLocaleString('es-CL');
