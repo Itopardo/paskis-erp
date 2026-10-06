@@ -33,9 +33,10 @@
     .vacio { text-align: center; padding: 24px; color: #b07790; }
     .resumen { margin-top: 12px; font-size: 13px; color: #b07790; text-align: right; }
     .tabla-wrap { overflow-x: auto; }
+    body.cargando { visibility: hidden; }
   </style>
 </head>
-<body>
+<body class="cargando">
   <div class="top">
     <a class="volver" href="inventario.html">← Inventario</a>
     <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
@@ -67,16 +68,14 @@
     <div class="resumen" id="resumen"></div>
   </div>
 
-<script>
-  const KI = 'paskis_ingredientes';
+<script type="module">
+  import { requerirSesion, escuchar, guardar, borrar as borrarDoc, nuevoId } from './datos.js';
   const $ = id => document.getElementById(id);
   const clp = n => '$' + (n < 10 ? Number(n.toFixed(2)) : Math.round(n)).toLocaleString('es-CL');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const NOMBRE_UNIDAD = { g: 'g', kg: 'kg', ml: 'ml', l: 'L', un: 'unidad' };
   $('unidad').innerHTML = Object.keys(NOMBRE_UNIDAD).map(u => `<option value="${u}">${NOMBRE_UNIDAD[u]}</option>`).join('');
-  let ingredientes = [];
-  try { ingredientes = JSON.parse(localStorage.getItem(KI)) || []; } catch (e) {}
-  const guardar = () => { try { localStorage.setItem(KI, JSON.stringify(ingredientes)); } catch (e) { alert('No se pudo guardar en este navegador.'); } };
+  let ingredientes = [], cargado = false;
   let editando = null;
 
   // Costo por unidad mostrado de forma legible: por kg / por L para masa y volumen
@@ -89,6 +88,7 @@
   }
 
   function render() {
+    if (!cargado) { $('lista').innerHTML = '<tr><td colspan="6" class="vacio">Cargando...</td></tr>'; return; }
     const q = $('buscar').value.trim().toLowerCase();
     const filas = ingredientes.filter(i => i.nombre.toLowerCase().includes(q));
     $('lista').innerHTML = filas.length ? filas.map(i => `<tr>
@@ -103,15 +103,16 @@
   }
   function limpiar() { editando = null; $('form').reset(); $('guardar').textContent = 'AGREGAR'; $('cancelar').style.display = 'none'; }
 
-  $('form').addEventListener('submit', e => {
+  $('form').addEventListener('submit', async e => {
     e.preventDefault();
     const d = { nombre: $('nombre').value.trim(), cantidad: Number($('cantidad').value), unidad: $('unidad').value, costo: Number($('costo').value) };
     if (!d.nombre) return;
     const dup = ingredientes.find(i => i.nombre.toLowerCase() === d.nombre.toLowerCase() && i.id !== editando);
     if (dup) { alert(`"${dup.nombre}" ya existe. Usa Editar para cambiarlo.`); return; }
-    if (editando) Object.assign(ingredientes.find(i => i.id === editando), d);
-    else ingredientes.unshift({ id: Date.now().toString(36), ...d });
-    guardar(); limpiar(); render(); $('nombre').focus();
+    const prev = editando ? ingredientes.find(i => i.id === editando) : null;
+    const reg = prev ? { ...prev, ...d } : { id: nuevoId(), ...d, creado: Date.now() };
+    limpiar(); $('nombre').focus();
+    await guardar('ingredientes', reg);
   });
   window.editar = id => {
     const i = ingredientes.find(x => x.id === id); if (!i) return;
@@ -119,13 +120,17 @@
     $('guardar').textContent = 'GUARDAR'; $('cancelar').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' }); $('nombre').focus();
   };
-  window.borrar = id => {
+  window.borrar = async id => {
     const i = ingredientes.find(x => x.id === id);
-    if (i && confirm(`¿Eliminar "${i.nombre}"? Las recetas que lo usan pasarán a costo manual.`)) { ingredientes = ingredientes.filter(x => x.id !== id); guardar(); if (editando === id) limpiar(); render(); }
+    if (i && confirm(`¿Eliminar "${i.nombre}"? Las recetas que lo usan pasarán a costo manual.`)) { if (editando === id) limpiar(); await borrarDoc('ingredientes', id); }
   };
   $('cancelar').addEventListener('click', limpiar);
   $('buscar').addEventListener('input', render);
+
+  await requerirSesion();
+  document.body.classList.remove('cargando');
   render();
+  escuchar('ingredientes', d => { ingredientes = d.sort((a, b) => (b.creado || 0) - (a.creado || 0)); cargado = true; render(); });
 </script>
 </body>
 </html>
