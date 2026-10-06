@@ -1,7 +1,7 @@
 // Conexión de Paskis ERP con Firebase (base de datos en la nube + inicio de sesión)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, writeBatch, increment } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, writeBatch, increment } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCvcBunSLzlFB0ygzQsoCLQbF5-_7SQYvo",
@@ -44,6 +44,10 @@ export function borrar(col, id) {
 }
 export function sumar(col, id, campo, n) {
   return setDoc(doc(db, col, id), { [campo]: increment(n) }, { merge: true }).catch(e => { aviso('No se pudo guardar: ' + e.message); throw e; });
+}
+export async function obtener(col, id) {
+  const s = await getDoc(doc(db, col, id));
+  return s.exists() ? { id: s.id, ...s.data() } : null;
 }
 export const nuevoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
