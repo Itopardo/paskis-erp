@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis - Comprobante de venta</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px 16px 48px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .acciones { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    button, .btn2 { border: 0; cursor: pointer; font-weight: 700; border-radius: 999px; font-family: inherit; font-size: 14px; text-decoration: none; }
+    .btn { background: #fff; color: #e8508a; padding: 12px 26px; letter-spacing: 1px; box-shadow: 0 6px 16px rgba(0,0,0,.15); }
+    .btn2 { background: rgba(255,255,255,.25); color: #fff; padding: 12px 20px; }
+    .ayuda { color: #fff; font-size: 12px; opacity: .9; max-width: 340px; text-align: center; line-height: 1.4; }
+
+    /* Ticket: 58 mm de papel, 48 mm de impresión */
+    .ticket { width: 58mm; background: #fff; padding: 4mm 5mm 6mm; color: #000; font-family: "Courier New", Courier, monospace; font-size: 11px; line-height: 1.35; box-shadow: 0 8px 20px rgba(0,0,0,.18); }
+    .ticket .logo { display: block; width: 36mm; margin: 0 auto 2mm; image-rendering: pixelated; }
+    .c { text-align: center; }
+    .b { font-weight: 700; }
+    .titulo { font-size: 12px; font-weight: 700; letter-spacing: 1px; margin: 1mm 0; }
+    .sep { border-top: 1px dashed #000; margin: 2mm 0; }
+    .fila { display: flex; justify-content: space-between; gap: 2mm; }
+    .fila span:last-child { text-align: right; white-space: nowrap; }
+    .item { margin-bottom: 1.2mm; }
+    .item .det { padding-left: 2mm; }
+    .total { font-size: 14px; font-weight: 700; }
+    .peq { font-size: 9.5px; }
+    .msg { color: #fff; font-size: 15px; text-align: center; margin-top: 40px; }
+
+    @page { size: 58mm auto; margin: 0; }
+    @media print {
+      html, body { background: #fff; padding: 0; margin: 0; display: block; min-height: 0; }
+      .acciones, .ayuda { display: none !important; }
+      .ticket { width: 48mm; padding: 0 0 6mm; margin: 0 auto; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="acciones">
+    <button class="btn" id="imprimir">IMPRIMIR</button>
+    <a class="btn2" href="ventas.html">← Volver a ventas</a>
+  </div>
+  <div id="contenido"><div class="msg">Cargando comprobante...</div></div>
+  <div class="ayuda">En la ventana de impresión elige tu impresora térmica, tamaño de papel 58 mm y márgenes "Ninguno".</div>
+
+<script type="module">
+  import { requerirSesion, obtener } from './datos.js';
+  const $ = id => document.getElementById(id);
+  const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const LOGO = 'data:image/png;base64,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';
+
+  // Datos del negocio que aparecen en el comprobante (se pueden completar más adelante)
+  const NEGOCIO = { nombre: 'PASKIS COOKIES & CAKE', lineas: [] };
+
+  await requerirSesion();
+  const params = new URLSearchParams(location.search);
+  const v = await obtener('ventas', params.get('id') || '-');
+  if (!v) { $('contenido').innerHTML = '<div class="msg">No se encontró la venta.</div>'; $('imprimir').disabled = true; }
+  else {
+    const [a, m, d] = v.fecha.split('-');
+    const hora = v.creado ? new Date(v.creado).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+    const numero = v.id.slice(-6).toUpperCase();
+    const unidades = v.lineas.reduce((s, l) => s + l.cantidad, 0);
+    $('contenido').innerHTML = `<div class="ticket">
+      <img class="logo" src="${LOGO}" alt="Paskis">
+      ${NEGOCIO.lineas.map(x => `<div class="c peq">${esc(x)}</div>`).join('')}
+      <div class="sep"></div>
+      <div class="c titulo">COMPROBANTE DE VENTA</div>
+      <div class="c">N° ${numero}</div>
+      <div class="sep"></div>
+      <div class="fila"><span>Fecha:</span><span>${d}-${m}-${a} ${hora}</span></div>
+      ${v.cliente ? `<div class="fila"><span>Cliente:</span><span>${esc(v.cliente)}</span></div>` : ''}
+      <div class="sep"></div>
+      ${v.lineas.map(l => `<div class="item">
+        <div class="b">${esc(l.nombre)}</div>
+        <div class="fila det"><span>${l.cantidad} x ${clp(l.precio)}</span><span>${clp(l.cantidad * l.precio)}</span></div>
+      </div>`).join('')}
+      <div class="sep"></div>
+      <div class="fila peq"><span>Artículos:</span><span>${unidades}</span></div>
+      <div class="fila total"><span>TOTAL</span><span>${clp(v.total)}</span></div>
+      <div class="fila"><span>Pago:</span><span>${esc(v.pago)}</span></div>
+      <div class="sep"></div>
+      <div class="c b">¡Gracias por su compra!</div>
+      <div class="c peq" style="margin-top:2mm">Comprobante interno.<br>No válido como boleta.</div>
+    </div>`;
+    document.title = 'Comprobante ' + numero;
+    if (params.get('imprimir') === '1') { const img = document.querySelector('.ticket img'); const go = () => setTimeout(() => window.print(), 300); img.complete ? go() : img.onload = go; }
+  }
+  $('imprimir').addEventListener('click', () => window.print());
+</script>
+</body>
+</html>
