@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis ERP - Iniciar sesión</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 24px 16px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; }
+    .logo { width: min(75vw, 360px); height: auto; }
+    .card { background: #fff; border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 380px; box-shadow: 0 10px 28px rgba(0,0,0,.15); }
+    h1 { color: #e8508a; font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 20px; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; margin-bottom: 14px; }
+    input { width: 100%; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 12px; font-size: 15px; color: #4a2236; outline: none; font-family: inherit; }
+    input:focus { border-color: #e8508a; }
+    button { width: 100%; border: 0; cursor: pointer; font-weight: 700; border-radius: 999px; background: #e8508a; color: #fff; padding: 13px; font-size: 16px; letter-spacing: 2px; margin-top: 6px; font-family: inherit; }
+    button:hover { background: #d43f78; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .error { color: #c0392b; font-size: 13px; min-height: 18px; text-align: center; margin-top: 12px; }
+    .ok { color: #2e7d32; }
+    .olvido { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: #b07790; background: none; border: 0; cursor: pointer; width: auto; margin-left: auto; margin-right: auto; padding: 0; letter-spacing: 0; font-weight: 500; }
+    .olvido:hover { background: none; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <img class="logo" src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis Cookies & Cake">
+  <form class="card" id="form">
+    <h1>INICIAR SESIÓN</h1>
+    <label>CORREO <input id="email" type="email" autocomplete="username" required></label>
+    <label>CONTRASEÑA <input id="pass" type="password" autocomplete="current-password" required></label>
+    <button type="submit" id="btn">ENTRAR</button>
+    <div class="error" id="msg"></div>
+    <button type="button" class="olvido" id="olvido">¿Olvidaste tu contraseña?</button>
+  </form>
+<script type="module">
+  import { entrar, usuarioActual, recuperarClave } from './datos.js';
+  const $ = id => document.getElementById(id);
+  if (await usuarioActual()) location.replace('menu.html');
+  const errores = {
+    'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+    'auth/wrong-password': 'Correo o contraseña incorrectos.',
+    'auth/user-not-found': 'Correo o contraseña incorrectos.',
+    'auth/invalid-email': 'El correo no es válido.',
+    'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+    'auth/network-request-failed': 'Sin conexión a internet.',
+    'auth/user-disabled': 'Este usuario está deshabilitado.'
+  };
+  $('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    $('btn').disabled = true; $('msg').className = 'error'; $('msg').textContent = '';
+    try { await entrar($('email').value.trim(), $('pass').value); location.replace('menu.html'); }
+    catch (err) { $('msg').textContent = errores[err.code] || 'No se pudo iniciar sesión (' + err.code + ').'; $('btn').disabled = false; }
+  });
+  $('olvido').addEventListener('click', async () => {
+    const email = $('email').value.trim();
+    if (!email) { $('msg').className = 'error'; $('msg').textContent = 'Escribe tu correo arriba y vuelve a presionar.'; return; }
+    try { await recuperarClave(email); $('msg').className = 'error ok'; $('msg').textContent = 'Si el correo está registrado, te llegará un enlace para cambiar la contraseña.'; }
+    catch (err) { $('msg').className = 'error'; $('msg').textContent = errores[err.code] || 'No se pudo enviar el correo.'; }
+  });
+</script>
+</body>
+</html>
