@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis ERP - Pedidos agendados</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; padding: 24px 16px 48px; }
+    .top { max-width: 960px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .top img { height: 70px; }
+    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; min-width: 60px; }
+    a.logo-link { display: inline-block; line-height: 0; transition: transform .15s; }
+    a.logo-link:hover { transform: scale(1.04); }
+    h1 { color: #fff; text-align: center; letter-spacing: 3px; font-size: 24px; margin-bottom: 20px; }
+    h2 { color: #e8508a; font-size: 14px; letter-spacing: 1.5px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 960px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    .fila { display: grid; gap: 12px; margin-bottom: 14px; }
+    .f1 { grid-template-columns: 2fr 1.2fr 1fr .8fr; }
+    .f2 { grid-template-columns: 1fr 3fr; }
+    .f3 { grid-template-columns: 1fr 1fr 2fr; }
+    @media (max-width: 700px) { .f1, .f2, .f3 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .f1 label:first-child, .f2 label:last-child, .f3 label:last-child { grid-column: 1 / -1; } }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; }
+    label small { font-weight: 500; letter-spacing: 0; color: #b07790; }
+    input, select, textarea { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; background: #fff; font-family: inherit; }
+    textarea { resize: vertical; min-height: 44px; }
+    input:focus, select:focus, textarea:focus { border-color: #e8508a; }
+    input:disabled { background: #fbf3f6; color: #b07790; }
+    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; font-family: inherit; }
+    .btn { background: #e8508a; color: #fff; padding: 12px 22px; font-size: 14px; letter-spacing: 1px; }
+    .btn:hover { background: #d43f78; }
+    .btn:disabled { opacity: .6; cursor: wait; }
+    .btn2 { background: #f5e1ea; color: #a8325f; padding: 10px 16px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; white-space: nowrap; }
+    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; vertical-align: middle; }
+    .items td { padding: 6px 4px; border: 0; }
+    .items th { padding: 6px 4px; }
+    .items input, .items select { padding: 9px 10px; font-size: 14px; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    @media (max-width: 640px) {
+      .items thead { display: none; }
+      .items tr { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto auto; gap: 8px; align-items: end; padding: 10px 0; border-bottom: 1px solid #fbe3ec; }
+      .items td { padding: 0; }
+      .items td:first-child { grid-column: 1 / -1; }
+      .items td[data-l]::before { content: attr(data-l); display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #e8508a; margin-bottom: 4px; }
+      .items td.num { padding-bottom: 10px; }
+    }
+    .quitar { background: none; color: #c9a3b5; font-size: 18px; padding: 4px 8px; }
+    .quitar:hover { color: #c0392b; }
+    .pie { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 2px solid #f5c2d6; }
+    .montos { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; font-size: 14px; }
+    .montos b { font-size: 18px; color: #e8508a; }
+    .montos .abono { width: 120px; }
+    .acciones-form { display: flex; gap: 8px; }
+    .cancel { display: none; }
+    .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+    .chip { background: #fde4ee; color: #a8325f; padding: 8px 14px; border-radius: 999px; font-size: 13px; }
+    .chip.activo { background: #e8508a; color: #fff; }
+    .filtros input { flex: 1; min-width: 160px; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .kpi { background: #fff5f9; border-radius: 12px; padding: 12px 14px; }
+    .kpi div { font-size: 11px; letter-spacing: 1px; color: #b07790; font-weight: 700; }
+    .kpi b { font-size: 20px; color: #4a2236; font-variant-numeric: tabular-nums; }
+    @media (max-width: 640px) { .kpis { grid-template-columns: 1fr; } }
+    /* Tarjetas de pedido */
+    .lista { display: flex; flex-direction: column; gap: 12px; }
+    .ped { border: 1.5px solid #f5c2d6; border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: 110px 1fr auto; gap: 14px; align-items: start; }
+    .ped.atrasado { border-color: #e57373; background: #fff6f6; }
+    .ped.hecho { opacity: .65; }
+    .fecha { text-align: center; background: #fde4ee; border-radius: 12px; padding: 8px 4px; }
+    .fecha .dia { font-size: 26px; font-weight: 800; color: #e8508a; line-height: 1; }
+    .fecha .mes { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #a8325f; }
+    .fecha .rel { font-size: 11px; color: #b07790; margin-top: 4px; }
+    .fecha .hora { font-size: 12px; font-weight: 700; color: #4a2236; margin-top: 2px; }
+    .info .cli { font-weight: 800; font-size: 16px; }
+    .info .meta { font-size: 13px; color: #8a5a70; margin-top: 2px; }
+    .info .meta a { color: #25a35a; text-decoration: none; font-weight: 700; }
+    .info .prods { font-size: 14px; margin-top: 8px; }
+    .info .nota { font-size: 13px; background: #fff8e1; color: #7a5b00; border-radius: 8px; padding: 6px 10px; margin-top: 8px; }
+    .lado { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 170px; }
+    .lado .tot { font-size: 18px; font-weight: 800; }
+    .lado .saldo { font-size: 12px; color: #8a5a70; text-align: right; }
+    .lado .saldo b { color: #c0392b; }
+    .estado { border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; border: 0; width: auto; cursor: pointer; }
+    .e-Pendiente { background: #fff3cd; color: #8a6d00; }
+    .e-Enpreparacion { background: #e3f2fd; color: #1565c0; }
+    .e-Listo { background: #e8f5e9; color: #2e7d32; }
+    .e-Entregado { background: #eceff1; color: #546e7a; }
+    .e-Cancelado { background: #fdecea; color: #c0392b; }
+    .botones { display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
+    .ico { background: none; padding: 4px 6px; color: #e8508a; font-size: 13px; text-decoration: none; font-weight: 700; }
+    .ico:hover { text-decoration: underline; }
+    .entregar { background: #e8508a; color: #fff; padding: 7px 12px; border-radius: 999px; font-size: 12px; }
+    .entregar:hover { background: #d43f78; }
+    .tag-atr { display: inline-block; background: #c0392b; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .5px; padding: 2px 6px; border-radius: 6px; margin-left: 6px; vertical-align: middle; }
+    @media (max-width: 640px) { .ped { grid-template-columns: 80px 1fr; } .lado { grid-column: 1 / -1; align-items: stretch; min-width: 0; } .lado .saldo { text-align: left; } .botones { justify-content: flex-start; } }
+    .vacio { text-align: center; padding: 24px; color: #b07790; }
+    .tabla-wrap { overflow-x: auto; }
+    .ok { background: #e8f5e9; color: #2e7d32; border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-top: 12px; display: none; }
+    body.cargando { visibility: hidden; }
+  </style>
+</head>
+<body class="cargando">
+  <div class="top">
+    <a class="volver" href="menu.html">← Menú</a>
+    <a href="menu.html" class="logo-link" title="Ir al menú principal"><img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis"></a>
+    <span style="min-width:60px"></span>
+  </div>
+  <h1>PEDIDOS AGENDADOS</h1>
+
+  <div class="card" id="formCard">
+    <h2 id="tituloForm">NUEVO PEDIDO</h2>
+    <div class="fila f1">
+      <label>CLIENTE <input id="cliente" placeholder="Ej: María González"></label>
+      <label><span>TELÉFONO <small>(opcional)</small></span><input id="telefono" type="tel" placeholder="+56 9 ..."></label>
+      <label>FECHA DE ENTREGA <input id="fecha" type="date"></label>
+      <label><span>HORA <small>(opcional)</small></span><input id="hora" type="time"></label>
+    </div>
+    <div class="fila f2">
+      <label>ENTREGA
+        <select id="tipo"><option>Retiro en local</option><option>Despacho</option></select>
+      </label>
+      <label><span>DIRECCIÓN <small>(si es despacho)</small></span><input id="direccion" placeholder="Calle, número, comuna" disabled></label>
+    </div>
+    <div class="tabla-wrap">
+      <table class="items">
+        <thead><tr><th style="width:42%">PRODUCTO</th><th style="width:14%">CANTIDAD</th><th style="width:18%">PRECIO UNIT.</th><th class="num" style="width:20%">SUBTOTAL</th><th></th></tr></thead>
+        <tbody id="items"></tbody>
+      </table>
+    </div>
+    <button type="button" class="btn2" id="agregar" style="margin-top:10px">+ Agregar producto</button>
+    <div class="fila f3" style="margin-top:14px">
+      <label>MEDIO DE PAGO
+        <select id="pago"><option>Transferencia</option><option>Efectivo</option><option>Débito</option><option>Crédito</option><option>Otro</option></select>
+      </label>
+      <label>ABONO <input id="abono" type="number" min="0" step="1" placeholder="$ 0"></label>
+      <label><span>NOTAS <small>(diseño, mensaje en la torta, alergias...)</small></span><textarea id="notas" rows="1" placeholder="Ej: escribir 'Feliz cumpleaños Sofía'"></textarea></label>
+    </div>
+    <div class="pie">
+      <div class="montos">
+        <div>TOTAL <b id="total">$0</b></div>
+        <div>SALDO <b id="saldo">$0</b></div>
+      </div>
+      <div class="acciones-form">
+        <button type="button" class="btn2 cancel" id="cancelar">Cancelar</button>
+        <button type="button" class="btn" id="guardar">AGENDAR PEDIDO</button>
+      </div>
+    </div>
+    <div class="ok" id="ok"></div>
+  </div>
+
+  <div class="card">
+    <h2>PEDIDOS</h2>
+    <div class="filtros" id="filtros">
+      <button class="chip activo" data-f="proximos">Por entregar</button>
+      <button class="chip" data-f="hoy">Hoy</button>
+      <button class="chip" data-f="semana">Próximos 7 días</button>
+      <button class="chip" data-f="entregados">Entregados</button>
+      <button class="chip" data-f="todos">Todos</button>
+      <input id="buscar" placeholder="Buscar cliente o producto...">
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div>POR ENTREGAR</div><b id="kPend">0</b></div>
+      <div class="kpi"><div>PARA HOY</div><b id="kHoy">0</b></div>
+      <div class="kpi"><div>SALDO POR COBRAR</div><b id="kSaldo">$0</b></div>
+    </div>
+    <div class="lista" id="lista"></div>
+  </div>
+
+<script type="module">
+  import { requerirSesion, escuchar, guardar, borrar as borrarDoc, sumar, nuevoId } from './datos.js';
+  const $ = id => document.getElementById(id);
+  const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const hoyISO = () => new Date().toLocaleDateString('sv-SE');
+  const sumarDias = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv-SE'); };
+  const MESES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  const ESTADOS = ['Pendiente', 'En preparación', 'Listo', 'Entregado', 'Cancelado'];
+  const claseEstado = e => 'e-' + e.replace(/\s/g, '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  let productos = [], ingredientes = [], stock = {}, pedidos = [], cargado = false;
+  let items = [], editando = null, filtro = 'proximos', usuario = null;
+
+  // Costo de producto (receta o manual), igual que en Productos
+  const UNIDADES = { g: ['masa', 1], kg: ['masa', 1000], ml: ['vol', 1], l: ['vol', 1000], un: ['un', 1] };
+  function convertir(c, de, a) { const A = UNIDADES[de], B = UNIDADES[a]; return (!A || !B || A[0] !== B[0]) ? null : c * A[1] / B[1]; }
+  function costoLinea(l) {
+    const ing = ingredientes.find(i => i.nombre.trim().toLowerCase() === (l.nombre || '').trim().toLowerCase());
+    if (ing && ing.cantidad > 0) { const c = convertir(Number(l.cantidad) || 0, l.unidad, ing.unidad); if (c !== null) return c * ing.costo / ing.cantidad; }
+    return Number(l.costo) || 0;
+  }
+  function costoProducto(p) {
+    if (!p) return null;
+    if (p.receta && p.receta.lineas && p.receta.lineas.length) return p.receta.lineas.reduce((s, l) => s + costoLinea(l), 0) / (p.receta.rinde || 1);
+    if (p.costo !== null && p.costo !== undefined && p.costo !== '') return Number(p.costo);
+    return null;
+  }
+
+  // ---------- Formulario ----------
+  const nuevaLinea = () => ({ productoId: '', cantidad: 1, precio: '' });
+  function opcionesProductos(sel) {
+    const orden = [...productos].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    return '<option value="">Selecciona...</option>' + orden.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('');
+  }
+  function renderItems() {
+    if (!productos.length) { $('items').innerHTML = `<tr><td colspan="5" class="vacio">Primero crea tus productos en <a href="productos.html" style="color:#e8508a">Productos</a>.</td></tr>`; totales(); return; }
+    $('items').innerHTML = items.map((it, i) => `<tr>
+      <td><select onchange="elegir(${i},this.value)">${opcionesProductos(it.productoId)}</select></td>
+      <td data-l="CANTIDAD"><input type="number" min="1" step="1" value="${it.cantidad}" oninput="cambiar(${i},'cantidad',this.value)"></td>
+      <td data-l="PRECIO UNIT."><input type="number" min="0" step="1" value="${it.precio}" placeholder="$" oninput="cambiar(${i},'precio',this.value)"></td>
+      <td class="num" id="sub_${i}"></td>
+      <td><button type="button" class="quitar" title="Quitar" onclick="quitarItem(${i})">×</button></td>
+    </tr>`).join('');
+    items.forEach((_, i) => pintarSub(i));
+    totales();
+  }
+  const pintarSub = i => { $('sub_' + i).textContent = clp((Number(items[i].cantidad) || 0) * (Number(items[i].precio) || 0)); };
+  function totales() {
+    const t = items.reduce((s, it) => s + (Number(it.cantidad) || 0) * (Number(it.precio) || 0), 0);
+    $('total').textContent = clp(t);
+    $('saldo').textContent = clp(Math.max(0, t - (Number($('abono').value) || 0)));
+    return t;
+  }
+  window.elegir = (i, id) => { items[i].productoId = id; const p = productos.find(x => x.id === id); items[i].precio = p ? p.valor : ''; renderItems(); };
+  window.cambiar = (i, campo, v) => { items[i][campo] = v; pintarSub(i); totales(); };
+  window.quitarItem = i => { items.splice(i, 1); if (!items.length) items.push(nuevaLinea()); renderItems(); };
+  $('agregar').addEventListener('click', () => { items.push(nuevaLinea()); renderItems(); });
+  $('abono').addEventListener('input', totales);
+  $('tipo').addEventListener('change', () => { const d = $('tipo').value === 'Despacho'; $('direccion').disabled = !d; if (!d) $('direccion').value = ''; });
+
+  function limpiar() {
+    editando = null; items = [nuevaLinea()];
+    ['cliente', 'telefono', 'hora', 'direccion', 'abono', 'notas'].forEach(id => $(id).value = '');
+    $('fecha').value = sumarDias(hoyISO(), 1); $('tipo').selectedIndex = 0; $('pago').selectedIndex = 0; $('direccion').disabled = true;
+    $('tituloForm').textContent = 'NUEVO PEDIDO'; $('guardar').textContent = 'AGENDAR PEDIDO'; $('cancelar').style.display = 'none';
+    renderItems();
+  }
+  $('cancelar').addEventListener('click', limpiar);
+
+  $('guardar').addEventListener('click', async () => {
+    const cliente = $('cliente').value.trim();
+    const validos = items.filter(it => it.productoId && Number(it.cantidad) > 0);
+    if (!cliente) { alert('Ingresa el nombre del cliente.'); $('cliente').focus(); return; }
+    if (!$('fecha').value) { alert('Ingresa la fecha de entrega.'); return; }
+    if (!validos.length) { alert('Agrega al menos un producto.'); return; }
+    if ($('tipo').value === 'Despacho' && !$('direccion').value.trim()) { alert('Ingresa la dirección de despacho.'); $('direccion').focus(); return; }
+    const lineas = validos.map(it => { const p = productos.find(x => x.id === it.productoId); return { productoId: it.productoId, nombre: p ? p.nombre : '', cantidad: Math.round(Number(it.cantidad)), precio: Number(it.precio) || 0 }; });
+    const total = lineas.reduce((s, l) => s + l.cantidad * l.precio, 0);
+    const prev = editando ? pedidos.find(x => x.id === editando) : null;
+    const pedido = {
+      ...(prev || { id: nuevoId(), estado: 'Pendiente', creado: Date.now(), creadoPor: usuario ? usuario.email : '' }),
+      cliente, telefono: $('telefono').value.trim(), fecha: $('fecha').value, hora: $('hora').value,
+      tipo: $('tipo').value, direccion: $('direccion').value.trim(), lineas, total,
+      abono: Math.min(total, Number($('abono').value) || 0), pago: $('pago').value, notas: $('notas').value.trim()
+    };
+    $('guardar').disabled = true;
+    try {
+      await guardar('pedidos', pedido);
+      $('ok').style.display = 'block';
+      $('ok').textContent = prev ? 'Pedido actualizado.' : `Pedido de ${cliente} agendado para el ${fechaLarga(pedido.fecha)}.`;
+      setTimeout(() => { $('ok').style.display = 'none'; }, 5000);
+      limpiar();
+    } finally { $('guardar').disabled = false; }
+  });
+
+  // ---------- Lista ----------
+  function fechaLarga(iso) { const [a, m, d] = iso.split('-'); return `${Number(d)} de ${MESES[Number(m) - 1].toLowerCase()} ${a}`; }
+  function relativo(iso) {
+    const hoy = hoyISO();
+    if (iso === hoy) return 'Hoy';
+    if (iso === sumarDias(hoy, 1)) return 'Mañana';
+    if (iso === sumarDias(hoy, -1)) return 'Ayer';
+    const dias = Math.round((new Date(iso + 'T12:00:00') - new Date(hoy + 'T12:00:00')) / 86400000);
+    return dias > 0 ? `En ${dias} días` : `Hace ${-dias} días`;
+  }
+  const abierto = p => p.estado !== 'Entregado' && p.estado !== 'Cancelado';
+  function pasaFiltro(p) {
+    const hoy = hoyISO();
+    if (filtro === 'proximos') return abierto(p);
+    if (filtro === 'hoy') return p.fecha === hoy && p.estado !== 'Cancelado';
+    if (filtro === 'semana') return abierto(p) && p.fecha >= hoy && p.fecha <= sumarDias(hoy, 6);
+    if (filtro === 'entregados') return p.estado === 'Entregado';
+    return true;
+  }
+  const waLink = tel => { let n = tel.replace(/\D/g, ''); if (n.length === 9) n = '56' + n; return n.length >= 9 ? `https://wa.me/${n}` : null; };
+
+  function render() {
+    if (!cargado) { $('lista').innerHTML = '<div class="vacio">Cargando...</div>'; return; }
+    const hoy = hoyISO();
+    const q = $('buscar').value.trim().toLowerCase();
+    let filas = pedidos.filter(p => pasaFiltro(p) && (!q || p.cliente.toLowerCase().includes(q) || p.lineas.some(l => l.nombre.toLowerCase().includes(q))));
+    const asc = filtro !== 'entregados' && filtro !== 'todos';
+    filas.sort((a, b) => ((a.fecha + (a.hora || '99')).localeCompare(b.fecha + (b.hora || '99'))) * (asc ? 1 : -1));
+    $('lista').innerHTML = filas.length ? filas.map(p => {
+      const [a, m, d] = p.fecha.split('-');
+      const atrasado = abierto(p) && p.fecha < hoy;
+      const saldo = Math.max(0, p.total - (p.abono || 0));
+      const wa = p.telefono ? waLink(p.telefono) : null;
+      return `<div class="ped ${atrasado ? 'atrasado' : ''} ${abierto(p) ? '' : 'hecho'}">
+        <div class="fecha"><div class="dia">${Number(d)}</div><div class="mes">${MESES[Number(m) - 1]} ${a.slice(2)}</div><div class="rel">${relativo(p.fecha)}</div>${p.hora ? `<div class="hora">${p.hora}</div>` : ''}</div>
+        <div class="info">
+          <div class="cli">${esc(p.cliente)}${atrasado ? '<span class="tag-atr">ATRASADO</span>' : ''}</div>
+          <div class="meta">${p.tipo === 'Despacho' ? '🚚 Despacho: ' + esc(p.direccion) : '🏠 Retiro en local'}${p.telefono ? ` · ${wa ? `<a href="${wa}" target="_blank">WhatsApp ${esc(p.telefono)}</a>` : esc(p.telefono)}` : ''}</div>
+          <div class="prods">${p.lineas.map(l => `${l.cantidad} × ${esc(l.nombre)}`).join('<br>')}</div>
+          ${p.notas ? `<div class="nota">📝 ${esc(p.notas)}</div>` : ''}
+        </div>
+        <div class="lado">
+          <select class="estado ${claseEstado(p.estado)}" onchange="cambiarEstado('${p.id}', this.value)" ${p.ventaId ? 'disabled title="Ya registrado como venta"' : ''}>${ESTADOS.map(e => `<option ${e === p.estado ? 'selected' : ''}>${e}</option>`).join('')}</select>
+          <div class="tot">${clp(p.total)}</div>
+          <div class="saldo">Abono ${clp(p.abono || 0)} · Saldo ${saldo > 0 && !p.ventaId ? `<b>${clp(saldo)}</b>` : clp(p.ventaId ? 0 : saldo)}<br>${esc(p.pago)}</div>
+          <div class="botones">
+            ${p.ventaId ? `<a class="ico" href="comprobante.html?id=${p.ventaId}" target="_blank">Comprobante</a>` : (p.estado !== 'Cancelado' ? `<button class="entregar" onclick="entregar('${p.id}')">Entregar y cobrar</button>` : '')}
+            ${p.ventaId ? '' : `<button class="ico" onclick="editar('${p.id}')">Editar</button>`}
+            <button class="ico" onclick="eliminar('${p.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') : `<div class="vacio">${pedidos.length ? 'No hay pedidos en esta vista.' : 'Aún no hay pedidos agendados.'}</div>`;
+    const pend = pedidos.filter(abierto);
+    $('kPend').textContent = pend.length;
+    $('kHoy').textContent = pend.filter(p => p.fecha === hoy).length;
+    $('kSaldo').textContent = clp(pend.reduce((s, p) => s + Math.max(0, p.total - (p.abono || 0)), 0));
+  }
+  $('filtros').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    filtro = b.dataset.f;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c === b));
+    render();
+  });
+  $('buscar').addEventListener('input', render);
+
+  window.cambiarEstado = async (id, estado) => {
+    const p = pedidos.find(x => x.id === id); if (!p) return;
+    if (estado === 'Entregado' && !p.ventaId && confirm('¿Registrar también este pedido como venta? (descuenta stock y genera comprobante)')) { await entregar(id, true); render(); return; }
+    await guardar('pedidos', { ...p, estado });
+  };
+  window.editar = id => {
+    const p = pedidos.find(x => x.id === id); if (!p) return;
+    editando = id;
+    $('cliente').value = p.cliente; $('telefono').value = p.telefono || ''; $('fecha').value = p.fecha; $('hora').value = p.hora || '';
+    $('tipo').value = p.tipo; $('direccion').disabled = p.tipo !== 'Despacho'; $('direccion').value = p.direccion || '';
+    $('pago').value = p.pago; $('abono').value = p.abono || ''; $('notas').value = p.notas || '';
+    items = p.lineas.map(l => ({ productoId: l.productoId, cantidad: l.cantidad, precio: l.precio }));
+    $('tituloForm').textContent = 'EDITAR PEDIDO'; $('guardar').textContent = 'GUARDAR CAMBIOS'; $('cancelar').style.display = 'block';
+    renderItems();
+    $('formCard').scrollIntoView({ behavior: 'smooth' });
+  };
+  window.eliminar = async id => {
+    const p = pedidos.find(x => x.id === id); if (!p) return;
+    if (!confirm(`¿Eliminar el pedido de ${p.cliente} (${fechaLarga(p.fecha)})?` + (p.ventaId ? ' La venta registrada se mantiene.' : ''))) return;
+    if (editando === id) limpiar();
+    await borrarDoc('pedidos', id);
+  };
+
+  // Entregar: registra la venta (descuenta stock si hay) y marca el pedido como entregado
+  window.entregar = async (id, sinPreguntar) => {
+    const p = pedidos.find(x => x.id === id); if (!p || p.ventaId) return;
+    if (!sinPreguntar && !confirm(`¿Marcar como ENTREGADO el pedido de ${p.cliente} y registrarlo como venta por ${clp(p.total)}?`)) return;
+    const lineas = p.lineas.map(l => { const prod = productos.find(x => x.id === l.productoId); const c = costoProducto(prod); return { ...l, costo: c === null ? null : Math.round(c) }; });
+    const faltan = lineas.filter(l => stock[l.productoId] !== undefined && l.cantidad > stock[l.productoId]);
+    if (faltan.length && !confirm('Hay productos con menos stock del pedido. ¿Registrar igual? (el stock quedará negativo)')) return;
+    const descontados = lineas.filter(l => stock[l.productoId] !== undefined).map(l => ({ productoId: l.productoId, cantidad: l.cantidad }));
+    const venta = {
+      id: nuevoId(), fecha: hoyISO(), cliente: p.cliente, pago: p.pago, lineas, total: p.total,
+      costoTotal: lineas.reduce((s, l) => s + l.cantidad * (l.costo || 0), 0), conCosto: lineas.every(l => l.costo !== null),
+      descontados, usuario: usuario ? usuario.email : '', creado: Date.now(), pedidoId: p.id
+    };
+    await guardar('ventas', venta);
+    for (const d of descontados) await sumar('stock', d.productoId, 'cantidad', -d.cantidad);
+    await guardar('pedidos', { ...p, estado: 'Entregado', ventaId: venta.id, entregado: Date.now() });
+    if (confirm('Pedido entregado y venta registrada. ¿Imprimir comprobante?')) window.open(`comprobante.html?id=${venta.id}&imprimir=1`, '_blank');
+  };
+
+  // ---------- Carga ----------
+  usuario = await requerirSesion();
+  document.body.classList.remove('cargando');
+  limpiar(); render();
+  escuchar('productos', d => { productos = d; renderItems(); });
+  escuchar('ingredientes', d => { ingredientes = d; });
+  escuchar('stock', d => { stock = {}; d.forEach(x => { stock[x.id] = Number(x.cantidad) || 0; }); });
+  escuchar('pedidos', d => { pedidos = d; cargado = true; render(); });
+</script>
+</body>
+</html>
