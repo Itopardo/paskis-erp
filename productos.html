@@ -6,56 +6,84 @@
   <title>Paskis ERP - Productos</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #ff82b0;
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      color: #4a2236;
-      padding: 24px 16px 48px;
-    }
-    .top { max-width: 900px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    body { background: #ff82b0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; padding: 24px 16px 48px; }
+    .top { max-width: 960px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .top img { height: 70px; }
-    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; min-width: 60px; }
     h1 { color: #fff; text-align: center; letter-spacing: 3px; font-size: 24px; margin-bottom: 20px; }
-    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 900px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
-    form { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end; }
+    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 960px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    form.alta { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end; }
     label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; }
-    input { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; }
-    input:focus { border-color: #e8508a; }
-    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; }
+    label small { font-weight: 500; letter-spacing: 0; color: #b07790; }
+    input, select { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; background: #fff; font-family: inherit; }
+    input:focus, select:focus { border-color: #e8508a; }
+    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; font-family: inherit; }
     .btn { background: #e8508a; color: #fff; padding: 11px 20px; font-size: 14px; letter-spacing: 1px; }
     .btn:hover { background: #d43f78; }
-    .cancel { background: #f5e1ea; color: #a8325f; padding: 11px 16px; font-size: 14px; display: none; }
+    .btn2 { background: #f5e1ea; color: #a8325f; padding: 11px 16px; font-size: 14px; }
+    .cancel { display: none; }
     .acciones { display: flex; gap: 8px; }
-    @media (max-width: 640px) { form { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } form label:first-child { grid-column: 1 / -1; } .acciones { grid-column: 1 / -1; } .acciones .btn { flex: 1; } }
-    .buscar { width: 100%; margin-bottom: 14px; }
+    @media (max-width: 640px) { form.alta { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } form.alta label:first-child, .acciones { grid-column: 1 / -1; } .acciones .btn { flex: 1; } }
+    .buscar { margin-bottom: 14px; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; }
-    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; }
-    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; white-space: nowrap; }
+    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; vertical-align: middle; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .neg { color: #c0392b; }
+    .tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .5px; padding: 2px 6px; border-radius: 6px; margin-left: 6px; vertical-align: middle; }
+    .tag.receta { background: #fde4ee; color: #d43f78; }
+    .tag.manual { background: #f1f1f1; color: #888; }
+    .muted { color: #c9a3b5; }
     .ico { background: none; padding: 4px 6px; color: #e8508a; font-size: 13px; }
     .ico:hover { text-decoration: underline; }
+    .mas { position: relative; display: inline-block; }
+    .dots { background: none; color: #e8508a; font-size: 20px; line-height: 1; padding: 0 8px 6px; letter-spacing: 1px; }
+    .dots:hover { background: #fde4ee; }
+    .menu { display: none; position: absolute; right: 0; top: 100%; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); z-index: 5; min-width: 150px; overflow: hidden; }
+    .menu.open { display: block; }
+    .menu button { display: block; width: 100%; text-align: left; background: none; padding: 10px 14px; color: #4a2236; font-weight: 600; font-size: 14px; border-radius: 0; }
+    .menu button:hover { background: #fde4ee; }
     .vacio { text-align: center; padding: 24px; color: #b07790; }
     .resumen { margin-top: 12px; font-size: 13px; color: #b07790; text-align: right; }
     .tabla-wrap { overflow-x: auto; }
+    .tabla-wrap.prod { overflow: visible; }
+    @media (max-width: 760px) { .tabla-wrap.prod { overflow-x: auto; padding-bottom: 90px; margin-bottom: -90px; } }
+    /* Modal receta */
+    .fondo { display: none; position: fixed; inset: 0; background: rgba(74,34,54,.45); z-index: 20; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow-y: auto; }
+    .fondo.open { display: flex; }
+    .modal { background: #fff; border-radius: 18px; width: 100%; max-width: 820px; padding: 22px; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+    .modal h2 { color: #e8508a; font-size: 18px; letter-spacing: 1px; margin-bottom: 4px; }
+    .modal .sub { color: #b07790; font-size: 13px; margin-bottom: 16px; }
+    .rinde { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 14px; }
+    .rinde input { width: 90px; }
+    .rec td { padding: 6px 4px; border: 0; }
+    .rec th { padding: 6px 4px; }
+    .rec input, .rec select { padding: 8px 10px; font-size: 14px; }
+    .auto { font-size: 14px; padding: 8px 4px; }
+    .auto small { display: block; font-size: 10px; color: #b07790; }
+    .quitar { background: none; color: #c9a3b5; font-size: 18px; padding: 4px 8px; }
+    .quitar:hover { color: #c0392b; }
+    .totales { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 2px solid #f5c2d6; }
+    .totales b { color: #e8508a; }
+    .pie { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .aviso { font-size: 12px; color: #b07790; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div class="top">
     <a class="volver" href="menu.html">← Menú</a>
     <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
-    <span style="width:60px"></span>
+    <span style="min-width:60px"></span>
   </div>
   <h1>PRODUCTOS</h1>
 
   <div class="card">
-    <form id="form">
+    <form class="alta" id="form">
       <label>NOMBRE PRODUCTO <input id="nombre" required placeholder="Ej: Torta de chocolate"></label>
       <label>VALOR UNITARIO <input id="valor" type="number" min="0" step="1" required placeholder="$"></label>
-      <label>COSTO <input id="costo" type="number" min="0" step="1" required placeholder="$"></label>
+      <label><span>COSTO <small>(opcional)</small></span><input id="costo" type="number" min="0" step="1" placeholder="$ o desde receta"></label>
       <div class="acciones">
-        <button type="button" class="cancel" id="cancelar">Cancelar</button>
+        <button type="button" class="btn2 cancel" id="cancelar">Cancelar</button>
         <button type="submit" class="btn" id="guardar">AGREGAR</button>
       </div>
     </form>
@@ -63,7 +91,7 @@
 
   <div class="card">
     <input class="buscar" id="buscar" placeholder="Buscar producto...">
-    <div class="tabla-wrap">
+    <div class="tabla-wrap prod">
       <table>
         <thead><tr><th>PRODUCTO</th><th class="num">VALOR UNITARIO</th><th class="num">COSTO</th><th class="num">GANANCIA</th><th class="num">MARGEN</th><th></th></tr></thead>
         <tbody id="lista"></tbody>
@@ -72,30 +100,94 @@
     <div class="resumen" id="resumen"></div>
   </div>
 
+  <!-- Modal receta -->
+  <div class="fondo" id="fondo">
+    <div class="modal">
+      <h2 id="mTitulo">RECETA</h2>
+      <div class="sub">Elige ingredientes de tu inventario para que el costo se calcule solo. Si un ingrediente no está en inventario, ingresa su costo a mano.</div>
+      <div class="rinde">Esta receta rinde <input id="rinde" type="number" min="1" step="1" value="1"> unidad(es) del producto</div>
+      <div class="tabla-wrap">
+        <table class="rec">
+          <thead><tr><th style="width:34%">INGREDIENTE</th><th style="width:16%">CANTIDAD</th><th style="width:16%">UNIDAD</th><th class="num" style="width:26%">COSTO</th><th></th></tr></thead>
+          <tbody id="filas"></tbody>
+        </table>
+      </div>
+      <button type="button" class="btn2" id="agregarFila" style="margin-top:10px">+ Agregar ingrediente</button>
+      <datalist id="ingList"></datalist>
+      <div class="totales">
+        <div>Costo total receta: <b id="tReceta">$0</b></div>
+        <div>Costo por unidad: <b id="tUnidad">$0</b></div>
+      </div>
+      <div class="aviso">Para agregar ingredientes al inventario ve a <a href="ingredientes.html" style="color:#e8508a">Inventario → Ingredientes</a>.</div>
+      <div class="pie">
+        <button type="button" class="btn2" id="borrarReceta" style="margin-right:auto;display:none">Quitar receta</button>
+        <button type="button" class="btn2" id="cerrar">Cancelar</button>
+        <button type="button" class="btn" id="guardarReceta">GUARDAR RECETA</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-  const KEY = 'paskis_productos';
+  const KP = 'paskis_productos', KI = 'paskis_ingredientes';
   const $ = id => document.getElementById(id);
   const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
-  let productos = [];
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const leer = k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch (e) { return []; } };
+  const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { alert('No se pudo guardar en este navegador.'); } };
+  const nuevoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  // Unidades y conversión
+  const UNIDADES = { g: ['masa', 1], kg: ['masa', 1000], ml: ['vol', 1], l: ['vol', 1000], un: ['un', 1] };
+  const NOMBRE_UNIDAD = { g: 'g', kg: 'kg', ml: 'ml', l: 'L', un: 'unidad' };
+  const opcionesUnidad = sel => Object.keys(UNIDADES).map(u => `<option value="${u}" ${u === sel ? 'selected' : ''}>${NOMBRE_UNIDAD[u]}</option>`).join('');
+  function convertir(cant, de, a) {
+    const A = UNIDADES[de], B = UNIDADES[a];
+    if (!A || !B || A[0] !== B[0]) return null;
+    return cant * A[1] / B[1];
+  }
+
+  let productos = leer(KP), ingredientes = leer(KI);
   let editando = null;
 
-  function cargar() { try { productos = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { productos = []; } }
-  function guardar() { try { localStorage.setItem(KEY, JSON.stringify(productos)); } catch (e) { alert('No se pudo guardar en este navegador.'); } }
-  const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  // Costo de una línea de receta: desde inventario si existe y la unidad es compatible, si no el costo manual
+  function costoLinea(l) {
+    const ing = ingredientes.find(i => i.nombre.trim().toLowerCase() === (l.nombre || '').trim().toLowerCase());
+    if (ing && ing.cantidad > 0) {
+      const c = convertir(Number(l.cantidad) || 0, l.unidad, ing.unidad);
+      if (c !== null) return { valor: c * ing.costo / ing.cantidad, auto: true };
+    }
+    return { valor: Number(l.costo) || 0, auto: false, sinUnidad: !!ing };
+  }
+  function costoProducto(p) {
+    if (p.receta && p.receta.lineas && p.receta.lineas.length) {
+      const total = p.receta.lineas.reduce((s, l) => s + costoLinea(l).valor, 0);
+      return { valor: total / (p.receta.rinde || 1), tipo: 'receta' };
+    }
+    if (p.costo !== null && p.costo !== undefined && p.costo !== '') return { valor: Number(p.costo), tipo: 'manual' };
+    return { valor: null, tipo: null };
+  }
 
   function render() {
     const q = $('buscar').value.trim().toLowerCase();
     const filas = productos.filter(p => p.nombre.toLowerCase().includes(q));
     $('lista').innerHTML = filas.length ? filas.map(p => {
-      const gan = p.valor - p.costo;
-      const margen = p.valor > 0 ? (gan / p.valor * 100) : 0;
+      const c = costoProducto(p);
+      const tiene = c.valor !== null;
+      const gan = tiene ? p.valor - c.valor : null;
+      const margen = tiene && p.valor > 0 ? gan / p.valor * 100 : null;
+      const cls = tiene && gan < 0 ? 'neg' : '';
       return `<tr>
         <td>${esc(p.nombre)}</td>
         <td class="num">${clp(p.valor)}</td>
-        <td class="num">${clp(p.costo)}</td>
-        <td class="num ${gan < 0 ? 'neg' : ''}">${clp(gan)}</td>
-        <td class="num ${gan < 0 ? 'neg' : ''}">${margen.toFixed(0)}%</td>
-        <td class="num"><button class="ico" onclick="editar('${p.id}')">Editar</button><button class="ico" onclick="borrar('${p.id}')">Eliminar</button></td>
+        <td class="num">${tiene ? clp(c.valor) + `<span class="tag ${c.tipo}">${c.tipo === 'receta' ? 'RECETA' : 'MANUAL'}</span>` : '<span class="muted">—</span>'}</td>
+        <td class="num ${cls}">${tiene ? clp(gan) : '<span class="muted">—</span>'}</td>
+        <td class="num ${cls}">${margen !== null ? margen.toFixed(0) + '%' : '<span class="muted">—</span>'}</td>
+        <td class="num">
+          <button class="ico" onclick="editar('${p.id}')">Editar</button><button class="ico" onclick="borrar('${p.id}')">Eliminar</button>
+          <span class="mas"><button class="dots" title="Más opciones" onclick="abrirMenu(event,'${p.id}')">⋯</button>
+            <div class="menu" id="m_${p.id}"><button onclick="abrirReceta('${p.id}')">${p.receta ? 'Editar receta' : 'Crear receta'}</button></div>
+          </span>
+        </td>
       </tr>`;
     }).join('') : `<tr><td colspan="6" class="vacio">${productos.length ? 'Sin resultados' : 'Aún no hay productos. Agrega el primero arriba.'}</td></tr>`;
     $('resumen').textContent = productos.length ? `${productos.length} producto${productos.length > 1 ? 's' : ''}` : '';
@@ -103,32 +195,121 @@
 
   function limpiar() {
     editando = null; $('form').reset();
+    $('costo').placeholder = '$ o desde receta';
     $('guardar').textContent = 'AGREGAR'; $('cancelar').style.display = 'none';
   }
 
   $('form').addEventListener('submit', e => {
     e.preventDefault();
-    const datos = { nombre: $('nombre').value.trim(), valor: Number($('valor').value), costo: Number($('costo').value) };
+    const costoTxt = $('costo').value.trim();
+    const datos = { nombre: $('nombre').value.trim(), valor: Number($('valor').value), costo: costoTxt === '' ? null : Number(costoTxt) };
     if (!datos.nombre) return;
     if (editando) Object.assign(productos.find(p => p.id === editando), datos);
-    else productos.unshift({ id: Date.now().toString(36), ...datos });
-    guardar(); limpiar(); render(); $('nombre').focus();
+    else productos.unshift({ id: nuevoId(), ...datos, receta: null });
+    escribir(KP, productos); limpiar(); render(); $('nombre').focus();
   });
 
   window.editar = id => {
     const p = productos.find(x => x.id === id); if (!p) return;
-    editando = id; $('nombre').value = p.nombre; $('valor').value = p.valor; $('costo').value = p.costo;
+    editando = id; $('nombre').value = p.nombre; $('valor').value = p.valor;
+    $('costo').value = p.costo ?? '';
+    $('costo').placeholder = p.receta ? 'Se usa el de la receta' : '$ o desde receta';
     $('guardar').textContent = 'GUARDAR'; $('cancelar').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' }); $('nombre').focus();
   };
   window.borrar = id => {
     const p = productos.find(x => x.id === id);
-    if (p && confirm(`¿Eliminar "${p.nombre}"?`)) { productos = productos.filter(x => x.id !== id); guardar(); if (editando === id) limpiar(); render(); }
+    if (p && confirm(`¿Eliminar "${p.nombre}"?`)) { productos = productos.filter(x => x.id !== id); escribir(KP, productos); if (editando === id) limpiar(); render(); }
   };
+  window.abrirMenu = (e, id) => {
+    e.stopPropagation();
+    const m = $('m_' + id), abierto = m.classList.contains('open');
+    document.querySelectorAll('.menu.open').forEach(x => x.classList.remove('open'));
+    if (!abierto) m.classList.add('open');
+  };
+  document.addEventListener('click', () => document.querySelectorAll('.menu.open').forEach(x => x.classList.remove('open')));
   $('cancelar').addEventListener('click', limpiar);
   $('buscar').addEventListener('input', render);
 
-  cargar(); render();
+  // ---------- Receta ----------
+  let recetaDe = null, lineas = [];
+
+  window.abrirReceta = id => {
+    ingredientes = leer(KI);
+    const p = productos.find(x => x.id === id); if (!p) return;
+    recetaDe = id;
+    lineas = p.receta ? JSON.parse(JSON.stringify(p.receta.lineas)) : [];
+    if (!lineas.length) lineas.push({ nombre: '', cantidad: '', unidad: 'g', costo: '' });
+    $('rinde').value = p.receta ? p.receta.rinde : 1;
+    $('mTitulo').textContent = 'RECETA: ' + p.nombre.toUpperCase();
+    $('borrarReceta').style.display = p.receta ? 'block' : 'none';
+    $('ingList').innerHTML = ingredientes.map(i => `<option value="${esc(i.nombre)}">`).join('');
+    renderFilas();
+    $('fondo').classList.add('open');
+  };
+
+  function renderFilas() {
+    $('filas').innerHTML = lineas.map((l, i) => `<tr>
+      <td><input list="ingList" value="${esc(l.nombre)}" placeholder="Ej: Harina" oninput="cambiar(${i},'nombre',this.value)" onchange="elegirIng(${i},this.value)"></td>
+      <td><input type="number" min="0" step="any" value="${esc(l.cantidad)}" placeholder="0" oninput="cambiar(${i},'cantidad',this.value)"></td>
+      <td><select onchange="cambiar(${i},'unidad',this.value);renderFilas()">${opcionesUnidad(l.unidad)}</select></td>
+      <td class="num" id="c_${i}"></td>
+      <td><button type="button" class="quitar" title="Quitar" onclick="quitarFila(${i})">×</button></td>
+    </tr>`).join('');
+    lineas.forEach((_, i) => pintarCosto(i));
+    totales();
+  }
+
+  function pintarCosto(i) {
+    const l = lineas[i], c = costoLinea(l), celda = $('c_' + i);
+    if (c.auto) {
+      celda.innerHTML = `<div class="auto">${clp(c.valor)}<small>desde inventario</small></div>`;
+    } else {
+      const nota = c.sinUnidad ? 'unidad no compatible con inventario' : 'costo manual';
+      if (!celda.querySelector('input')) celda.innerHTML = `<input type="number" min="0" step="1" placeholder="$" value="${esc(l.costo)}" oninput="cambiar(${i},'costo',this.value)"><div class="auto" style="padding:2px 0 0"><small>${nota}</small></div>`;
+      else celda.querySelector('small').textContent = nota;
+    }
+  }
+
+  window.cambiar = (i, campo, v) => {
+    const antes = costoLinea(lineas[i]).auto;
+    lineas[i][campo] = v;
+    const ahora = costoLinea(lineas[i]).auto;
+    if (antes !== ahora) $('c_' + i).innerHTML = '';
+    pintarCosto(i); totales();
+  };
+  window.elegirIng = (i, v) => {
+    const ing = ingredientes.find(x => x.nombre.trim().toLowerCase() === v.trim().toLowerCase());
+    if (ing && convertir(1, lineas[i].unidad, ing.unidad) === null) { lineas[i].unidad = ing.unidad; renderFilas(); }
+  };
+  window.quitarFila = i => { lineas.splice(i, 1); if (!lineas.length) lineas.push({ nombre: '', cantidad: '', unidad: 'g', costo: '' }); renderFilas(); };
+  $('agregarFila').addEventListener('click', () => { lineas.push({ nombre: '', cantidad: '', unidad: 'g', costo: '' }); renderFilas(); $('filas').lastElementChild.querySelector('input').focus(); });
+  $('rinde').addEventListener('input', totales);
+
+  function totales() {
+    const total = lineas.reduce((s, l) => s + costoLinea(l).valor, 0);
+    const rinde = Math.max(1, Number($('rinde').value) || 1);
+    $('tReceta').textContent = clp(total);
+    $('tUnidad').textContent = clp(total / rinde);
+  }
+
+  function cerrarModal() { $('fondo').classList.remove('open'); recetaDe = null; }
+  $('cerrar').addEventListener('click', cerrarModal);
+  $('fondo').addEventListener('click', e => { if (e.target.id === 'fondo') cerrarModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+
+  $('guardarReceta').addEventListener('click', () => {
+    const p = productos.find(x => x.id === recetaDe); if (!p) return;
+    const validas = lineas.filter(l => l.nombre.trim()).map(l => ({ nombre: l.nombre.trim(), cantidad: Number(l.cantidad) || 0, unidad: l.unidad, costo: l.costo === '' ? '' : Number(l.costo) }));
+    p.receta = validas.length ? { rinde: Math.max(1, Number($('rinde').value) || 1), lineas: validas } : null;
+    escribir(KP, productos); cerrarModal(); render();
+  });
+  $('borrarReceta').addEventListener('click', () => {
+    const p = productos.find(x => x.id === recetaDe);
+    if (p && confirm('¿Quitar la receta? El producto volverá a usar el costo manual.')) { p.receta = null; escribir(KP, productos); cerrarModal(); render(); }
+  });
+
+  render();
 </script>
 </body>
 </html>
