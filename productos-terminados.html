@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis ERP - Productos terminados</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; padding: 24px 16px 48px; }
+    .top { max-width: 960px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .top img { height: 70px; }
+    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; min-width: 80px; }
+    h1 { color: #fff; text-align: center; letter-spacing: 3px; font-size: 24px; margin-bottom: 20px; }
+    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 960px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    form { display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; align-items: end; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; }
+    input, select { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; background: #fff; font-family: inherit; }
+    input:focus, select:focus { border-color: #e8508a; }
+    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; font-family: inherit; }
+    .btn { background: #e8508a; color: #fff; padding: 11px 20px; font-size: 14px; letter-spacing: 1px; }
+    .btn:hover { background: #d43f78; }
+    .cancel { background: #f5e1ea; color: #a8325f; padding: 11px 16px; font-size: 14px; display: none; }
+    .acciones { display: flex; gap: 8px; }
+    @media (max-width: 640px) { form { grid-template-columns: minmax(0,1fr); } .acciones .btn { flex: 1; } }
+    .nota { font-size: 12px; color: #b07790; margin-top: 10px; }
+    .nota a { color: #e8508a; }
+    .buscar { margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; white-space: nowrap; }
+    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; vertical-align: middle; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .stock { display: inline-flex; align-items: center; gap: 6px; }
+    .pm { width: 28px; height: 28px; border-radius: 8px; background: #fde4ee; color: #d43f78; font-size: 16px; line-height: 1; }
+    .pm:hover { background: #f9cfe0; }
+    .cant { min-width: 34px; text-align: center; font-weight: 700; font-size: 15px; }
+    .cero { color: #c0392b; }
+    .ico { background: none; padding: 4px 6px; color: #e8508a; font-size: 13px; }
+    .ico:hover { text-decoration: underline; }
+    .muted { color: #c9a3b5; }
+    .vacio { text-align: center; padding: 24px; color: #b07790; }
+    .tabla-wrap { overflow-x: auto; }
+    .totales { display: flex; justify-content: flex-end; gap: 24px; flex-wrap: wrap; margin-top: 14px; font-size: 14px; }
+    .totales b { color: #e8508a; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a class="volver" href="inventario.html">← Inventario</a>
+    <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
+    <span style="min-width:80px"></span>
+  </div>
+  <h1>PRODUCTOS TERMINADOS</h1>
+
+  <div class="card">
+    <form id="form">
+      <label>PRODUCTO <select id="producto" required></select></label>
+      <label>CANTIDAD EN STOCK <input id="cantidad" type="number" min="0" step="1" required placeholder="Ej: 10"></label>
+      <div class="acciones">
+        <button type="button" class="cancel" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn" id="guardar">GUARDAR</button>
+      </div>
+    </form>
+    <div class="nota" id="nota"></div>
+  </div>
+
+  <div class="card">
+    <input class="buscar" id="buscar" placeholder="Buscar producto...">
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>PRODUCTO</th><th style="text-align:center">STOCK</th><th class="num">VALOR UNITARIO</th><th class="num">TOTAL A PRECIO VENTA</th><th class="num">TOTAL A COSTO</th><th></th></tr></thead>
+        <tbody id="lista"></tbody>
+      </table>
+    </div>
+    <div class="totales" id="totales"></div>
+  </div>
+
+<script>
+  const KP = 'paskis_productos', KI = 'paskis_ingredientes', KS = 'paskis_stock';
+  const $ = id => document.getElementById(id);
+  const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } };
+  const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { alert('No se pudo guardar en este navegador.'); } };
+
+  const productos = leer(KP, []), ingredientes = leer(KI, []);
+  let stock = leer(KS, {});  // { idProducto: cantidad }
+  let editando = null;
+
+  // Mismo cálculo de costo que en Productos (receta o manual)
+  const UNIDADES = { g: ['masa', 1], kg: ['masa', 1000], ml: ['vol', 1], l: ['vol', 1000], un: ['un', 1] };
+  function convertir(c, de, a) { const A = UNIDADES[de], B = UNIDADES[a]; return (!A || !B || A[0] !== B[0]) ? null : c * A[1] / B[1]; }
+  function costoLinea(l) {
+    const ing = ingredientes.find(i => i.nombre.trim().toLowerCase() === (l.nombre || '').trim().toLowerCase());
+    if (ing && ing.cantidad > 0) { const c = convertir(Number(l.cantidad) || 0, l.unidad, ing.unidad); if (c !== null) return c * ing.costo / ing.cantidad; }
+    return Number(l.costo) || 0;
+  }
+  function costoProducto(p) {
+    if (p.receta && p.receta.lineas && p.receta.lineas.length) return p.receta.lineas.reduce((s, l) => s + costoLinea(l), 0) / (p.receta.rinde || 1);
+    if (p.costo !== null && p.costo !== undefined && p.costo !== '') return Number(p.costo);
+    return null;
+  }
+
+  // Quitar del stock productos que ya no existen
+  Object.keys(stock).forEach(id => { if (!productos.find(p => p.id === id)) delete stock[id]; });
+
+  function llenarSelect(sel) {
+    if (!productos.length) {
+      $('producto').innerHTML = '<option value="">No hay productos creados</option>';
+      $('nota').innerHTML = 'Primero crea tus productos en <a href="productos.html">Productos</a>.';
+      return;
+    }
+    const orden = [...productos].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    $('producto').innerHTML = '<option value="">Selecciona un producto...</option>' + orden.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.nombre)}${stock[p.id] !== undefined ? '  (stock: ' + stock[p.id] + ')' : ''}</option>`).join('');
+    $('nota').textContent = 'Si el producto ya tiene stock, la cantidad que ingreses lo reemplaza. Usa los botones − / + para ajustes rápidos.';
+  }
+
+  function render() {
+    const q = $('buscar').value.trim().toLowerCase();
+    const filas = productos.filter(p => stock[p.id] !== undefined && p.nombre.toLowerCase().includes(q)).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    let tVenta = 0, tCosto = 0, tUnid = 0, sinCosto = false;
+    $('lista').innerHTML = filas.length ? filas.map(p => {
+      const n = stock[p.id], costo = costoProducto(p);
+      tVenta += n * p.valor; tUnid += n;
+      if (costo === null) sinCosto = true; else tCosto += n * costo;
+      return `<tr>
+        <td>${esc(p.nombre)}</td>
+        <td style="text-align:center"><span class="stock"><button class="pm" onclick="ajustar('${p.id}',-1)" title="Restar 1">−</button><span class="cant ${n === 0 ? 'cero' : ''}">${n}</span><button class="pm" onclick="ajustar('${p.id}',1)" title="Sumar 1">+</button></span></td>
+        <td class="num">${clp(p.valor)}</td>
+        <td class="num">${clp(n * p.valor)}</td>
+        <td class="num">${costo === null ? '<span class="muted">—</span>' : clp(n * costo)}</td>
+        <td class="num"><button class="ico" onclick="editar('${p.id}')">Editar</button><button class="ico" onclick="quitar('${p.id}')">Quitar</button></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="6" class="vacio">${Object.keys(stock).length ? 'Sin resultados' : 'Aún no has registrado stock. Selecciona un producto arriba y anota la cantidad.'}</td></tr>`;
+    $('totales').innerHTML = filas.length ? `<div>Unidades: <b>${tUnid.toLocaleString('es-CL')}</b></div><div>Total a precio venta: <b>${clp(tVenta)}</b></div><div>Total a costo: <b>${clp(tCosto)}</b>${sinCosto ? ' <span class="muted">(algunos sin costo)</span>' : ''}</div>` : '';
+  }
+
+  function limpiar() { editando = null; $('form').reset(); $('producto').disabled = false; $('cancelar').style.display = 'none'; llenarSelect(); }
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const id = editando || $('producto').value;
+    if (!id) return;
+    stock[id] = Math.max(0, Math.round(Number($('cantidad').value) || 0));
+    escribir(KS, stock); limpiar(); render();
+  });
+  window.ajustar = (id, d) => { stock[id] = Math.max(0, (stock[id] || 0) + d); escribir(KS, stock); render(); llenarSelect($('producto').value); };
+  window.editar = id => {
+    editando = id; llenarSelect(id); $('producto').disabled = true;
+    $('cantidad').value = stock[id]; $('cancelar').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' }); $('cantidad').focus(); $('cantidad').select();
+  };
+  window.quitar = id => {
+    const p = productos.find(x => x.id === id);
+    if (p && confirm(`¿Quitar "${p.nombre}" del inventario de productos terminados?`)) { delete stock[id]; escribir(KS, stock); if (editando === id) limpiar(); render(); llenarSelect(); }
+  };
+  $('producto').addEventListener('change', () => { const id = $('producto').value; if (stock[id] !== undefined) $('cantidad').value = stock[id]; });
+  $('cancelar').addEventListener('click', limpiar);
+  $('buscar').addEventListener('input', render);
+
+  escribir(KS, stock); llenarSelect(); render();
+</script>
+</body>
+</html>
