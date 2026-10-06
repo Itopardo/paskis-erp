@@ -16,9 +16,10 @@
     .icon svg { width: 62px; height: 62px; fill: none; stroke: #e8508a; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .label { font-weight: 700; font-size: 14px; letter-spacing: 1.5px; text-align: center; }
     .volver { color: #fff; font-size: 14px; text-decoration: none; opacity: .9; }
+    body.cargando { visibility: hidden; }
   </style>
 </head>
-<body>
+<body class="cargando">
   <img class="logo" src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
   <h1>INVENTARIO</h1>
   <div class="grid">
@@ -32,5 +33,9 @@
     </a>
   </div>
   <a class="volver" href="menu.html">← Volver al menú</a>
+<script type="module">
+  import { requerirSesion } from './datos.js';
+  await requerirSesion(); document.body.classList.remove('cargando');
+</script>
 </body>
 </html>
