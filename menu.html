@@ -40,9 +40,13 @@
     .icon svg { width: 58px; height: 58px; fill: none; stroke: #e8508a; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .label { font-weight: 700; font-size: 13px; letter-spacing: 1.5px; text-align: center; }
     .volver { color: #fff; font-size: 14px; text-decoration: none; opacity: .9; }
+    .sesion { color: #fff; font-size: 13px; opacity: .95; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .sesion button { background: rgba(255,255,255,.25); color: #fff; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .sesion button:hover { background: rgba(255,255,255,.4); }
+    body.cargando { visibility: hidden; }
   </style>
 </head>
-<body>
+<body class="cargando">
   <img class="logo" src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
   <div class="grid">
     <a class="item" href="#ventas">
@@ -62,6 +66,14 @@
       <span class="label">PEDIDOS<br>AGENDADOS</span>
     </a>
   </div>
-  <a class="volver" href="index.html">← Volver al inicio</a>
+  <div class="sesion"><span id="usuario"></span><button id="salir">Cerrar sesión</button></div>
+<script type="module">
+  import { requerirSesion, salir, migrarLocal } from './datos.js';
+  const u = await requerirSesion();
+  document.body.classList.remove('cargando');
+  document.getElementById('usuario').textContent = u.email;
+  document.getElementById('salir').onclick = salir;
+  try { if (await migrarLocal()) alert('Listo, tus datos ya están guardados en la nube.'); } catch (e) { alert('No se pudieron subir los datos del navegador: ' + e.message); }
+</script>
 </body>
 </html>
