@@ -39,11 +39,12 @@
     .muted { color: #c9a3b5; }
     .vacio { text-align: center; padding: 24px; color: #b07790; }
     .tabla-wrap { overflow-x: auto; }
+    body.cargando { visibility: hidden; }
     .totales { display: flex; justify-content: flex-end; gap: 24px; flex-wrap: wrap; margin-top: 14px; font-size: 14px; }
     .totales b { color: #e8508a; }
   </style>
 </head>
-<body>
+<body class="cargando">
   <div class="top">
     <a class="volver" href="inventario.html">← Inventario</a>
     <img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis">
@@ -74,16 +75,14 @@
     <div class="totales" id="totales"></div>
   </div>
 
-<script>
-  const KP = 'paskis_productos', KI = 'paskis_ingredientes', KS = 'paskis_stock';
+<script type="module">
+  import { requerirSesion, escuchar, guardar, borrar as borrarDoc, sumar } from './datos.js';
   const $ = id => document.getElementById(id);
   const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } };
-  const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { alert('No se pudo guardar en este navegador.'); } };
 
-  const productos = leer(KP, []), ingredientes = leer(KI, []);
-  let stock = leer(KS, {});  // { idProducto: cantidad }
+  let productos = [], ingredientes = [], stock = {};  // stock: { idProducto: cantidad }
+  const listo = { productos: false, stock: false };
   let editando = null;
 
   // Mismo cálculo de costo que en Productos (receta o manual)
@@ -100,10 +99,8 @@
     return null;
   }
 
-  // Quitar del stock productos que ya no existen
-  Object.keys(stock).forEach(id => { if (!productos.find(p => p.id === id)) delete stock[id]; });
-
   function llenarSelect(sel) {
+    if (!listo.productos) { $('producto').innerHTML = '<option value="">Cargando...</option>'; return; }
     if (!productos.length) {
       $('producto').innerHTML = '<option value="">No hay productos creados</option>';
       $('nota').innerHTML = 'Primero crea tus productos en <a href="productos.html">Productos</a>.';
@@ -115,6 +112,7 @@
   }
 
   function render() {
+    if (!listo.productos || !listo.stock) { $('lista').innerHTML = '<tr><td colspan="6" class="vacio">Cargando...</td></tr>'; return; }
     const q = $('buscar').value.trim().toLowerCase();
     const filas = productos.filter(p => stock[p.id] !== undefined && p.nombre.toLowerCase().includes(q)).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
     let tVenta = 0, tCosto = 0, tUnid = 0, sinCosto = false;
@@ -124,7 +122,7 @@
       if (costo === null) sinCosto = true; else tCosto += n * costo;
       return `<tr>
         <td>${esc(p.nombre)}</td>
-        <td style="text-align:center"><span class="stock"><button class="pm" onclick="ajustar('${p.id}',-1)" title="Restar 1">−</button><span class="cant ${n === 0 ? 'cero' : ''}">${n}</span><button class="pm" onclick="ajustar('${p.id}',1)" title="Sumar 1">+</button></span></td>
+        <td style="text-align:center"><span class="stock"><button class="pm" onclick="ajustar('${p.id}',-1)" title="Restar 1">−</button><span class="cant ${n <= 0 ? 'cero' : ''}">${n}</span><button class="pm" onclick="ajustar('${p.id}',1)" title="Sumar 1">+</button></span></td>
         <td class="num">${clp(p.valor)}</td>
         <td class="num">${clp(n * p.valor)}</td>
         <td class="num">${costo === null ? '<span class="muted">—</span>' : clp(n * costo)}</td>
@@ -133,31 +131,38 @@
     }).join('') : `<tr><td colspan="6" class="vacio">${Object.keys(stock).length ? 'Sin resultados' : 'Aún no has registrado stock. Selecciona un producto arriba y anota la cantidad.'}</td></tr>`;
     $('totales').innerHTML = filas.length ? `<div>Unidades: <b>${tUnid.toLocaleString('es-CL')}</b></div><div>Total a precio venta: <b>${clp(tVenta)}</b></div><div>Total a costo: <b>${clp(tCosto)}</b>${sinCosto ? ' <span class="muted">(algunos sin costo)</span>' : ''}</div>` : '';
   }
+  const refrescar = () => { render(); if (!editando) llenarSelect($('producto').value); };
 
   function limpiar() { editando = null; $('form').reset(); $('producto').disabled = false; $('cancelar').style.display = 'none'; llenarSelect(); }
 
-  $('form').addEventListener('submit', e => {
+  $('form').addEventListener('submit', async e => {
     e.preventDefault();
     const id = editando || $('producto').value;
     if (!id) return;
-    stock[id] = Math.max(0, Math.round(Number($('cantidad').value) || 0));
-    escribir(KS, stock); limpiar(); render();
+    const n = Math.max(0, Math.round(Number($('cantidad').value) || 0));
+    limpiar();
+    await guardar('stock', { id, cantidad: n });
   });
-  window.ajustar = (id, d) => { stock[id] = Math.max(0, (stock[id] || 0) + d); escribir(KS, stock); render(); llenarSelect($('producto').value); };
+  window.ajustar = async (id, d) => { if (d < 0 && (stock[id] || 0) <= 0) return; await sumar('stock', id, 'cantidad', d); };
   window.editar = id => {
     editando = id; llenarSelect(id); $('producto').disabled = true;
     $('cantidad').value = stock[id]; $('cancelar').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' }); $('cantidad').focus(); $('cantidad').select();
   };
-  window.quitar = id => {
+  window.quitar = async id => {
     const p = productos.find(x => x.id === id);
-    if (p && confirm(`¿Quitar "${p.nombre}" del inventario de productos terminados?`)) { delete stock[id]; escribir(KS, stock); if (editando === id) limpiar(); render(); llenarSelect(); }
+    if (p && confirm(`¿Quitar "${p.nombre}" del inventario de productos terminados?`)) { if (editando === id) limpiar(); await borrarDoc('stock', id); }
   };
   $('producto').addEventListener('change', () => { const id = $('producto').value; if (stock[id] !== undefined) $('cantidad').value = stock[id]; });
   $('cancelar').addEventListener('click', limpiar);
   $('buscar').addEventListener('input', render);
 
-  escribir(KS, stock); llenarSelect(); render();
+  await requerirSesion();
+  document.body.classList.remove('cargando');
+  refrescar();
+  escuchar('productos', d => { productos = d; listo.productos = true; refrescar(); });
+  escuchar('ingredientes', d => { ingredientes = d; render(); });
+  escuchar('stock', d => { stock = {}; d.forEach(x => { stock[x.id] = Number(x.cantidad) || 0; }); listo.stock = true; refrescar(); });
 </script>
 </body>
 </html>
