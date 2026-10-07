@@ -53,7 +53,6 @@
     .montos b { font-size: 18px; color: #e8508a; }
     .montos .abono { width: 120px; }
     .acciones-form { display: flex; gap: 8px; }
-    .cancel { display: none; }
     .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
     .chip { background: #fde4ee; color: #a8325f; padding: 8px 14px; border-radius: 999px; font-size: 13px; }
     .chip.activo { background: #e8508a; color: #fff; }
@@ -99,6 +98,46 @@
     .tabla-wrap { overflow-x: auto; }
     .ok { background: #e8f5e9; color: #2e7d32; border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-top: 12px; display: none; }
     body.cargando { visibility: hidden; }
+    /* Calendario */
+    .cal-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .cal-nav { display: flex; align-items: center; gap: 8px; }
+    .cal-nav button { background: #f5e1ea; color: #a8325f; width: 36px; height: 36px; font-size: 16px; }
+    .cal-nav button.hoy { width: auto; padding: 0 12px; font-size: 13px; }
+    .cal-mes { font-weight: 800; letter-spacing: 1.5px; color: #4a2236; min-width: 150px; text-align: center; }
+    .cal { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 4px; }
+    .cal .dsem { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #e8508a; text-align: center; padding: 4px 0; }
+    .dia-c { min-height: 92px; border: 1.5px solid #fbe3ec; border-radius: 10px; padding: 4px; cursor: pointer; background: #fff; display: flex; flex-direction: column; gap: 2px; overflow: hidden; transition: border-color .15s, background .15s; }
+    .dia-c:hover { border-color: #e8508a; }
+    .dia-c.otro { background: #fdf6f9; opacity: .55; }
+    .dia-c.pasado .num-d { color: #b07790; }
+    .dia-c.hoy { border-color: #e8508a; background: #fff0f6; }
+    .dia-c.hoy .num-d { background: #e8508a; color: #fff; }
+    .dia-c.sel { border-color: #4a2236; box-shadow: 0 0 0 2px #4a2236 inset; }
+    .num-d { font-size: 12px; font-weight: 700; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; }
+    .ev { font-size: 11px; line-height: 1.25; padding: 2px 5px; border-radius: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #fdecc8; color: #8a5a00; }
+    .ev.e-Enpreparacion { background: #dbeafe; color: #1d4ed8; }
+    .ev.e-Listo { background: #dcfce7; color: #15803d; }
+    .ev.e-Entregado { background: #eee; color: #888; text-decoration: line-through; }
+    .ev.e-Cancelado { background: #f3f3f3; color: #aaa; text-decoration: line-through; }
+    .ev.atr { background: #fde2e2; color: #c0392b; font-weight: 700; }
+    .mas { font-size: 11px; color: #a8325f; font-weight: 700; padding-left: 4px; }
+    .puntos { display: none; gap: 3px; flex-wrap: wrap; justify-content: center; }
+    .puntos i { width: 7px; height: 7px; border-radius: 50%; background: #e8508a; display: block; }
+    .puntos i.atr { background: #c0392b; } .puntos i.hecho { background: #ccc; }
+    @media (max-width: 640px) { .dia-c { min-height: 54px; align-items: center; padding: 3px 2px; } .dia-c .ev, .dia-c .mas { display: none; } .puntos { display: flex; } .cal .dsem { font-size: 10px; letter-spacing: 0; } }
+    .leyenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: #8a5a73; margin-top: 10px; }
+    .leyenda span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+    .dia-sel { display: none; margin-top: 12px; padding: 12px 14px; background: #fff0f6; border-radius: 12px; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+    .dia-sel b { color: #a8325f; }
+    .btn-agendar { display: inline-flex; align-items: center; gap: 8px; }
+    /* Modal del formulario */
+    .modal { position: fixed; inset: 0; background: rgba(74,34,54,.55); z-index: 50; display: none; overflow-y: auto; padding: 24px 12px; }
+    .modal.abierto { display: block; }
+    .modal .card { margin: 0 auto; animation: subir .2s ease-out; }
+    @keyframes subir { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .cerrar-x { background: none; color: #c9a3b5; font-size: 26px; line-height: 1; padding: 0 4px; }
+    .cerrar-x:hover { color: #e8508a; }
+    body.modal-on { overflow: hidden; }
   </style>
 </head>
 <body class="cargando">
@@ -109,8 +148,33 @@
   </div>
   <h1>PEDIDOS AGENDADOS</h1>
 
+  <div class="card">
+    <div class="cal-top">
+      <div class="cal-nav">
+        <button type="button" id="mesAnt" title="Mes anterior">◀</button>
+        <div class="cal-mes" id="calMes"></div>
+        <button type="button" id="mesSig" title="Mes siguiente">▶</button>
+        <button type="button" class="hoy" id="mesHoy">Hoy</button>
+      </div>
+      <button type="button" class="btn btn-agendar" id="abrirForm">+ AGENDAR PEDIDO</button>
+    </div>
+    <div class="cal" id="cal"></div>
+    <div class="leyenda">
+      <span style="--c:#fdecc8">Pendiente</span><span style="--c:#dbeafe">En preparación</span><span style="--c:#dcfce7">Listo</span><span style="--c:#fde2e2">Atrasado</span><span style="--c:#eee">Entregado</span>
+    </div>
+    <div class="dia-sel" id="diaSel">
+      <div id="diaSelTxt"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn2" id="verTodos">Ver todos</button>
+        <button type="button" class="btn" id="agendarDia">+ Agendar este día</button>
+      </div>
+    </div>
+    <div class="ok" id="ok"></div>
+  </div>
+
+  <div class="modal" id="modal">
   <div class="card" id="formCard">
-    <h2 id="tituloForm">NUEVO PEDIDO</h2>
+    <h2><span id="tituloForm">NUEVO PEDIDO</span><button type="button" class="cerrar-x" id="cerrarX" title="Cerrar">×</button></h2>
     <div class="fila f1">
       <label>CLIENTE <input id="cliente" placeholder="Ej: María González"></label>
       <label><span>TELÉFONO <small>(opcional)</small></span><input id="telefono" type="tel" placeholder="+56 9 ..."></label>
@@ -147,10 +211,10 @@
         <button type="button" class="btn" id="guardar">AGENDAR PEDIDO</button>
       </div>
     </div>
-    <div class="ok" id="ok"></div>
+  </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="listaCard">
     <h2>PEDIDOS</h2>
     <div class="filtros" id="filtros">
       <button class="chip activo" data-f="proximos">Por entregar</button>
@@ -158,6 +222,7 @@
       <button class="chip" data-f="semana">Próximos 7 días</button>
       <button class="chip" data-f="entregados">Entregados</button>
       <button class="chip" data-f="todos">Todos</button>
+      <button class="chip activo" data-f="dia" id="chipDia" style="display:none"></button>
       <input id="buscar" placeholder="Buscar cliente o producto...">
     </div>
     <div class="kpis">
@@ -180,7 +245,8 @@
   const claseEstado = e => 'e-' + e.replace(/\s/g, '').normalize('NFD').replace(/[̀-ͯ]/g, '');
 
   let productos = [], ingredientes = [], stock = {}, pedidos = [], cargado = false;
-  let items = [], editando = null, filtro = 'proximos', usuario = null;
+  let items = [], editando = null, filtro = 'proximos', usuario = null, selDia = null;
+  let mesVista = new Date(); mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth(), 1);
 
   // Costo de producto (receta o manual), igual que en Productos
   const UNIDADES = { g: ['masa', 1], kg: ['masa', 1000], ml: ['vol', 1], l: ['vol', 1000], un: ['un', 1] };
@@ -229,14 +295,22 @@
   $('abono').addEventListener('input', totales);
   $('tipo').addEventListener('change', () => { const d = $('tipo').value === 'Despacho'; $('direccion').disabled = !d; if (!d) $('direccion').value = ''; });
 
-  function limpiar() {
+  function limpiar(fecha) {
     editando = null; items = [nuevaLinea()];
     ['cliente', 'telefono', 'hora', 'direccion', 'abono', 'notas'].forEach(id => $(id).value = '');
-    $('fecha').value = sumarDias(hoyISO(), 1); $('tipo').selectedIndex = 0; $('pago').selectedIndex = 0; $('direccion').disabled = true;
-    $('tituloForm').textContent = 'NUEVO PEDIDO'; $('guardar').textContent = 'AGENDAR PEDIDO'; $('cancelar').style.display = 'none';
+    $('fecha').value = fecha || sumarDias(hoyISO(), 1); $('tipo').selectedIndex = 0; $('pago').selectedIndex = 0; $('direccion').disabled = true;
+    $('tituloForm').textContent = 'NUEVO PEDIDO'; $('guardar').textContent = 'AGENDAR PEDIDO';
     renderItems();
   }
-  $('cancelar').addEventListener('click', limpiar);
+  function abrirModal() { $('modal').classList.add('abierto'); document.body.classList.add('modal-on'); $('modal').scrollTop = 0; setTimeout(() => $('cliente').focus(), 50); }
+  function cerrarModal() { $('modal').classList.remove('abierto'); document.body.classList.remove('modal-on'); limpiar(); }
+  window.nuevoPedido = fecha => { limpiar(fecha); abrirModal(); };
+  $('abrirForm').addEventListener('click', () => nuevoPedido(selDia && selDia >= hoyISO() ? selDia : null));
+  $('agendarDia').addEventListener('click', () => nuevoPedido(selDia));
+  $('cancelar').addEventListener('click', cerrarModal);
+  $('cerrarX').addEventListener('click', cerrarModal);
+  $('modal').addEventListener('mousedown', e => { if (e.target === $('modal')) cerrarModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('modal').classList.contains('abierto')) cerrarModal(); });
 
   $('guardar').addEventListener('click', async () => {
     const cliente = $('cliente').value.trim();
@@ -260,7 +334,8 @@
       $('ok').style.display = 'block';
       $('ok').textContent = prev ? 'Pedido actualizado.' : `Pedido de ${cliente} agendado para el ${fechaLarga(pedido.fecha)}.`;
       setTimeout(() => { $('ok').style.display = 'none'; }, 5000);
-      limpiar();
+      cerrarModal();
+      const [a, m] = pedido.fecha.split('-').map(Number); mesVista = new Date(a, m - 1, 1); renderCal();
     } finally { $('guardar').disabled = false; }
   });
 
@@ -281,6 +356,7 @@
     if (filtro === 'hoy') return p.fecha === hoy && p.estado !== 'Cancelado';
     if (filtro === 'semana') return abierto(p) && p.fecha >= hoy && p.fecha <= sumarDias(hoy, 6);
     if (filtro === 'entregados') return p.estado === 'Entregado';
+    if (filtro === 'dia') return p.fecha === selDia;
     return true;
   }
   const waLink = tel => { let n = tel.replace(/\D/g, ''); if (n.length === 9) n = '56' + n; return n.length >= 9 ? `https://wa.me/${n}` : null; };
@@ -321,9 +397,61 @@
     $('kPend').textContent = pend.length;
     $('kHoy').textContent = pend.filter(p => p.fecha === hoy).length;
     $('kSaldo').textContent = clp(pend.reduce((s, p) => s + Math.max(0, p.total - (p.abono || 0)), 0));
+    renderCal(); pintarDiaSel();
   }
+
+  // ---------- Calendario ----------
+  const MESES_L = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const DIAS_L = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  function renderCal() {
+    const hoy = hoyISO();
+    const y = mesVista.getFullYear(), m = mesVista.getMonth();
+    $('calMes').textContent = `${MESES_L[m]} ${y}`;
+    const inicio = new Date(y, m, 1); inicio.setDate(1 - ((inicio.getDay() + 6) % 7)); // lunes
+    const fin = new Date(y, m + 1, 0); const celdas = Math.ceil((((new Date(y, m, 1).getDay() + 6) % 7) + fin.getDate()) / 7) * 7;
+    const porDia = {};
+    pedidos.forEach(p => { if (p.estado !== 'Cancelado' || filtro === 'todos') (porDia[p.fecha] = porDia[p.fecha] || []).push(p); });
+    let html = ['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM'].map(d => `<div class="dsem">${d}</div>`).join('');
+    for (let i = 0; i < celdas; i++) {
+      const d = new Date(inicio); d.setDate(inicio.getDate() + i);
+      const iso = d.toLocaleDateString('sv-SE');
+      const lista = (porDia[iso] || []).sort((a, b) => (a.hora || '99').localeCompare(b.hora || '99'));
+      const cls = ['dia-c', d.getMonth() !== m ? 'otro' : '', iso === hoy ? 'hoy' : '', iso < hoy ? 'pasado' : '', iso === selDia ? 'sel' : ''].join(' ');
+      const evs = lista.slice(0, 3).map(p => { const atr = abierto(p) && p.fecha < hoy; return `<div class="ev ${claseEstado(p.estado)} ${atr ? 'atr' : ''}" title="${esc(p.cliente)} · ${p.lineas.map(l => l.cantidad + ' × ' + esc(l.nombre)).join(', ')}">${p.hora ? p.hora + ' ' : ''}${esc(p.cliente)}</div>`; }).join('');
+      const puntos = lista.slice(0, 6).map(p => `<i class="${abierto(p) ? (p.fecha < hoy ? 'atr' : '') : 'hecho'}"></i>`).join('');
+      html += `<div class="${cls}" onclick="elegirDia('${iso}')"><div class="num-d">${d.getDate()}</div>${evs}${lista.length > 3 ? `<div class="mas">+${lista.length - 3} más</div>` : ''}<div class="puntos">${puntos}</div></div>`;
+    }
+    $('cal').innerHTML = html;
+  }
+  window.elegirDia = iso => {
+    if (selDia === iso) { quitarDia(); return; }
+    selDia = iso; filtro = 'dia';
+    const d = new Date(iso + 'T12:00:00');
+    $('diaSel').style.display = 'flex';
+    $('agendarDia').style.display = iso >= hoyISO() ? '' : 'none';
+    $('chipDia').style.display = ''; $('chipDia').textContent = `${d.getDate()} ${MESES[d.getMonth()].toLowerCase()} ✕`;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c.id === 'chipDia'));
+    render();
+  };
+  function pintarDiaSel() {
+    if (!selDia) return;
+    const d = new Date(selDia + 'T12:00:00');
+    const n = pedidos.filter(p => p.fecha === selDia && p.estado !== 'Cancelado').length;
+    $('diaSelTxt').innerHTML = `<b>${DIAS_L[d.getDay()][0].toUpperCase() + DIAS_L[d.getDay()].slice(1)} ${fechaLarga(selDia)}</b> · ${n ? n + (n === 1 ? ' pedido' : ' pedidos') : 'sin pedidos'}`;
+  }
+  function quitarDia() {
+    selDia = null; $('diaSel').style.display = 'none'; $('chipDia').style.display = 'none';
+    if (filtro === 'dia') { filtro = 'proximos'; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c.dataset.f === 'proximos')); }
+    render();
+  }
+  $('verTodos').addEventListener('click', quitarDia);
+  $('mesAnt').addEventListener('click', () => { mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth() - 1, 1); renderCal(); });
+  $('mesSig').addEventListener('click', () => { mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth() + 1, 1); renderCal(); });
+  $('mesHoy').addEventListener('click', () => { const h = new Date(); mesVista = new Date(h.getFullYear(), h.getMonth(), 1); renderCal(); });
   $('filtros').addEventListener('click', e => {
     const b = e.target.closest('.chip'); if (!b) return;
+    if (b.id === 'chipDia') { quitarDia(); return; }
+    if (selDia) { selDia = null; $('diaSel').style.display = 'none'; $('chipDia').style.display = 'none'; }
     filtro = b.dataset.f;
     document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c === b));
     render();
@@ -342,14 +470,14 @@
     $('tipo').value = p.tipo; $('direccion').disabled = p.tipo !== 'Despacho'; $('direccion').value = p.direccion || '';
     $('pago').value = p.pago; $('abono').value = p.abono || ''; $('notas').value = p.notas || '';
     items = p.lineas.map(l => ({ productoId: l.productoId, cantidad: l.cantidad, precio: l.precio }));
-    $('tituloForm').textContent = 'EDITAR PEDIDO'; $('guardar').textContent = 'GUARDAR CAMBIOS'; $('cancelar').style.display = 'block';
+    $('tituloForm').textContent = 'EDITAR PEDIDO'; $('guardar').textContent = 'GUARDAR CAMBIOS';
     renderItems();
-    $('formCard').scrollIntoView({ behavior: 'smooth' });
+    abrirModal();
   };
   window.eliminar = async id => {
     const p = pedidos.find(x => x.id === id); if (!p) return;
     if (!confirm(`¿Eliminar el pedido de ${p.cliente} (${fechaLarga(p.fecha)})?` + (p.ventaId ? ' La venta registrada se mantiene.' : ''))) return;
-    if (editando === id) limpiar();
+    if (editando === id) cerrarModal();
     await borrarDoc('pedidos', id);
   };
 
