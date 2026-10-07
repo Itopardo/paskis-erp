@@ -127,6 +127,18 @@
     @media (max-width: 640px) { .dia-c { min-height: 54px; align-items: center; padding: 3px 2px; } .dia-c .ev, .dia-c .mas { display: none; } .puntos { display: flex; } .cal .dsem { font-size: 10px; letter-spacing: 0; } }
     .leyenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: #8a5a73; margin-top: 10px; }
     .leyenda span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+    .ev.evt { background: #ede4ff; color: #5b2d91; font-weight: 700; }
+    .puntos i.evt { background: #7c4dbd; }
+    .ped.evento { border-color: #cdb8f0; background: #faf7ff; }
+    .ped.evento .fecha { background: #ede4ff; }
+    .ped.evento .fecha .dia, .ped.evento .fecha .mes { color: #6b3fa0; }
+    .tag-evt { display: inline-block; background: #7c4dbd; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 1px; padding: 5px 12px; border-radius: 999px; }
+    .btn-evt { background: #ede4ff; color: #5b2d91; padding: 12px 18px; font-size: 14px; letter-spacing: 1px; }
+    .btn-evt:hover { background: #e0d2fb; }
+    .acc-top { display: flex; gap: 8px; flex-wrap: wrap; }
+    @media (max-width: 640px) { .acc-top { width: 100%; } .acc-top button { flex: 1; padding: 12px 6px; font-size: 13px; letter-spacing: .3px; white-space: nowrap; } .tag-evt { align-self: flex-start; } }
+    .fe1 { grid-template-columns: 2fr 1fr .8fr; }
+    @media (max-width: 700px) { .fe1 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .fe1 label:first-child { grid-column: 1 / -1; } }
     .dia-sel { display: none; margin-top: 12px; padding: 12px 14px; background: #fff0f6; border-radius: 12px; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 14px; }
     .dia-sel b { color: #a8325f; }
     .btn-agendar { display: inline-flex; align-items: center; gap: 8px; }
@@ -156,18 +168,14 @@
         <button type="button" id="mesSig" title="Mes siguiente">▶</button>
         <button type="button" class="hoy" id="mesHoy">Hoy</button>
       </div>
-      <button type="button" class="btn btn-agendar" id="abrirForm">+ AGENDAR PEDIDO</button>
+      <div class="acc-top">
+        <button type="button" class="btn-evt" id="abrirEvento">+ EVENTO</button>
+        <button type="button" class="btn btn-agendar" id="abrirForm">+ AGENDAR PEDIDO</button>
+      </div>
     </div>
     <div class="cal" id="cal"></div>
     <div class="leyenda">
-      <span style="--c:#fdecc8">Pendiente</span><span style="--c:#dbeafe">En preparación</span><span style="--c:#dcfce7">Listo</span><span style="--c:#fde2e2">Atrasado</span><span style="--c:#eee">Entregado</span>
-    </div>
-    <div class="dia-sel" id="diaSel">
-      <div id="diaSelTxt"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button type="button" class="btn2" id="verTodos">Ver todos</button>
-        <button type="button" class="btn" id="agendarDia">+ Agendar este día</button>
-      </div>
+      <span style="--c:#fdecc8">Pendiente</span><span style="--c:#dbeafe">En preparación</span><span style="--c:#dcfce7">Listo</span><span style="--c:#fde2e2">Atrasado</span><span style="--c:#eee">Entregado</span><span style="--c:#ede4ff">★ Evento</span>
     </div>
     <div class="ok" id="ok"></div>
   </div>
@@ -214,8 +222,29 @@
   </div>
   </div>
 
+  <div class="modal" id="modalEv">
+  <div class="card">
+    <h2><span id="tituloEv">NUEVO EVENTO</span><button type="button" class="cerrar-x" id="cerrarEvX" title="Cerrar">×</button></h2>
+    <div class="fila fe1">
+      <label>EVENTO <input id="evTitulo" placeholder="Ej: Feria navideña, compra de insumos, cumpleaños..."></label>
+      <label>FECHA <input id="evFecha" type="date"></label>
+      <label><span>HORA <small>(opcional)</small></span><input id="evHora" type="time"></label>
+    </div>
+    <div class="fila">
+      <label><span>NOTAS <small>(opcional)</small></span><textarea id="evNotas" rows="2" placeholder="Detalles del evento"></textarea></label>
+    </div>
+    <div class="pie">
+      <div></div>
+      <div class="acciones-form">
+        <button type="button" class="btn2" id="cancelarEv">Cancelar</button>
+        <button type="button" class="btn" id="guardarEv">GUARDAR EVENTO</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
   <div class="card" id="listaCard">
-    <h2>PEDIDOS</h2>
+    <h2>PEDIDOS Y EVENTOS</h2>
     <div class="filtros" id="filtros">
       <button class="chip activo" data-f="proximos">Por entregar</button>
       <button class="chip" data-f="hoy">Hoy</button>
@@ -223,7 +252,7 @@
       <button class="chip" data-f="entregados">Entregados</button>
       <button class="chip" data-f="todos">Todos</button>
       <button class="chip activo" data-f="dia" id="chipDia" style="display:none"></button>
-      <input id="buscar" placeholder="Buscar cliente o producto...">
+      <input id="buscar" placeholder="Buscar cliente, producto o evento...">
     </div>
     <div class="kpis">
       <div class="kpi"><div>POR ENTREGAR</div><b id="kPend">0</b></div>
@@ -244,8 +273,8 @@
   const ESTADOS = ['Pendiente', 'En preparación', 'Listo', 'Entregado', 'Cancelado'];
   const claseEstado = e => 'e-' + e.replace(/\s/g, '').normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-  let productos = [], ingredientes = [], stock = {}, pedidos = [], cargado = false;
-  let items = [], editando = null, filtro = 'proximos', usuario = null, selDia = null;
+  let productos = [], ingredientes = [], stock = {}, pedidos = [], eventos = [], cargado = false;
+  let items = [], editando = null, filtro = 'proximos', usuario = null, selDia = null, editandoEv = null;
   let mesVista = new Date(); mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth(), 1);
 
   // Costo de producto (receta o manual), igual que en Productos
@@ -306,11 +335,73 @@
   function cerrarModal() { $('modal').classList.remove('abierto'); document.body.classList.remove('modal-on'); limpiar(); }
   window.nuevoPedido = fecha => { limpiar(fecha); abrirModal(); };
   $('abrirForm').addEventListener('click', () => nuevoPedido(selDia && selDia >= hoyISO() ? selDia : null));
-  $('agendarDia').addEventListener('click', () => nuevoPedido(selDia));
   $('cancelar').addEventListener('click', cerrarModal);
   $('cerrarX').addEventListener('click', cerrarModal);
   $('modal').addEventListener('mousedown', e => { if (e.target === $('modal')) cerrarModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('modal').classList.contains('abierto')) cerrarModal(); });
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if ($('modal').classList.contains('abierto')) cerrarModal(); if ($('modalEv').classList.contains('abierto')) cerrarEv(); });
+
+  // ---------- Eventos ----------
+  function abrirEv(ev, fecha) {
+    editandoEv = ev ? ev.id : null;
+    $('tituloEv').textContent = ev ? 'EDITAR EVENTO' : 'NUEVO EVENTO';
+    $('evTitulo').value = ev ? ev.titulo : ''; $('evFecha').value = ev ? ev.fecha : (fecha || hoyISO());
+    $('evHora').value = ev ? (ev.hora || '') : ''; $('evNotas').value = ev ? (ev.notas || '') : '';
+    $('modalEv').classList.add('abierto'); document.body.classList.add('modal-on'); $('modalEv').scrollTop = 0;
+    setTimeout(() => $('evTitulo').focus(), 50);
+  }
+  function cerrarEv() { $('modalEv').classList.remove('abierto'); document.body.classList.remove('modal-on'); editandoEv = null; }
+  $('abrirEvento').addEventListener('click', () => abrirEv(null, selDia && selDia >= hoyISO() ? selDia : null));
+  $('cancelarEv').addEventListener('click', cerrarEv);
+  $('cerrarEvX').addEventListener('click', cerrarEv);
+  $('modalEv').addEventListener('mousedown', e => { if (e.target === $('modalEv')) cerrarEv(); });
+  $('guardarEv').addEventListener('click', async () => {
+    const titulo = $('evTitulo').value.trim();
+    if (!titulo) { alert('Escribe el nombre del evento.'); $('evTitulo').focus(); return; }
+    if (!$('evFecha').value) { alert('Ingresa la fecha del evento.'); return; }
+    const prev = editandoEv ? eventos.find(x => x.id === editandoEv) : null;
+    const ev = { ...(prev || { id: nuevoId(), creado: Date.now(), creadoPor: usuario ? usuario.email : '' }), titulo, fecha: $('evFecha').value, hora: $('evHora').value, notas: $('evNotas').value.trim() };
+    $('guardarEv').disabled = true;
+    try {
+      await guardar('eventos', ev);
+      $('ok').style.display = 'block';
+      $('ok').textContent = prev ? 'Evento actualizado.' : `Evento "${titulo}" agregado para el ${fechaLarga(ev.fecha)}.`;
+      setTimeout(() => { $('ok').style.display = 'none'; }, 5000);
+      cerrarEv();
+      const [a, m] = ev.fecha.split('-').map(Number); mesVista = new Date(a, m - 1, 1); renderCal();
+    } finally { $('guardarEv').disabled = false; }
+  });
+  window.editarEv = id => { const ev = eventos.find(x => x.id === id); if (ev) abrirEv(ev); };
+  window.eliminarEv = async id => {
+    const ev = eventos.find(x => x.id === id); if (!ev) return;
+    if (!confirm(`¿Eliminar el evento "${ev.titulo}" (${fechaLarga(ev.fecha)})?`)) return;
+    await borrarDoc('eventos', id);
+  };
+  function pasaFiltroEv(ev) {
+    const hoy = hoyISO();
+    if (filtro === 'proximos') return ev.fecha >= hoy;
+    if (filtro === 'hoy') return ev.fecha === hoy;
+    if (filtro === 'semana') return ev.fecha >= hoy && ev.fecha <= sumarDias(hoy, 6);
+    if (filtro === 'entregados') return false;
+    if (filtro === 'dia') return ev.fecha === selDia;
+    return true;
+  }
+  function tarjetaEv(ev) {
+    const [a, m, d] = ev.fecha.split('-');
+    return `<div class="ped evento ${ev.fecha < hoyISO() ? 'hecho' : ''}">
+        <div class="fecha"><div class="dia">${Number(d)}</div><div class="mes">${MESES[Number(m) - 1]} ${a.slice(2)}</div><div class="rel">${relativo(ev.fecha)}</div>${ev.hora ? `<div class="hora">${ev.hora}</div>` : ''}</div>
+        <div class="info">
+          <div class="cli">★ ${esc(ev.titulo)}</div>
+          ${ev.notas ? `<div class="prods">${esc(ev.notas)}</div>` : ''}
+        </div>
+        <div class="lado">
+          <span class="tag-evt">EVENTO</span>
+          <div class="botones">
+            <button class="ico" onclick="editarEv('${ev.id}')">Editar</button>
+            <button class="ico" onclick="eliminarEv('${ev.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`;
+  }
 
   $('guardar').addEventListener('click', async () => {
     const cliente = $('cliente').value.trim();
@@ -366,9 +457,11 @@
     const hoy = hoyISO();
     const q = $('buscar').value.trim().toLowerCase();
     let filas = pedidos.filter(p => pasaFiltro(p) && (!q || p.cliente.toLowerCase().includes(q) || p.lineas.some(l => l.nombre.toLowerCase().includes(q))));
+    filas = filas.concat(eventos.filter(ev => pasaFiltroEv(ev) && (!q || ev.titulo.toLowerCase().includes(q) || (ev.notas || '').toLowerCase().includes(q))).map(ev => ({ ...ev, _evento: true })));
     const asc = filtro !== 'entregados' && filtro !== 'todos';
     filas.sort((a, b) => ((a.fecha + (a.hora || '99')).localeCompare(b.fecha + (b.hora || '99'))) * (asc ? 1 : -1));
     $('lista').innerHTML = filas.length ? filas.map(p => {
+      if (p._evento) return tarjetaEv(p);
       const [a, m, d] = p.fecha.split('-');
       const atrasado = abierto(p) && p.fecha < hoy;
       const saldo = Math.max(0, p.total - (p.abono || 0));
@@ -392,12 +485,12 @@
           </div>
         </div>
       </div>`;
-    }).join('') : `<div class="vacio">${pedidos.length ? 'No hay pedidos en esta vista.' : 'Aún no hay pedidos agendados.'}</div>`;
+    }).join('') : `<div class="vacio">${pedidos.length ? 'No hay pedidos ni eventos en esta vista.' : 'Aún no hay pedidos agendados.'}</div>`;
     const pend = pedidos.filter(abierto);
     $('kPend').textContent = pend.length;
     $('kHoy').textContent = pend.filter(p => p.fecha === hoy).length;
     $('kSaldo').textContent = clp(pend.reduce((s, p) => s + Math.max(0, p.total - (p.abono || 0)), 0));
-    renderCal(); pintarDiaSel();
+    renderCal();
   }
 
   // ---------- Calendario ----------
@@ -411,14 +504,15 @@
     const fin = new Date(y, m + 1, 0); const celdas = Math.ceil((((new Date(y, m, 1).getDay() + 6) % 7) + fin.getDate()) / 7) * 7;
     const porDia = {};
     pedidos.forEach(p => { if (p.estado !== 'Cancelado' || filtro === 'todos') (porDia[p.fecha] = porDia[p.fecha] || []).push(p); });
+    eventos.forEach(ev => (porDia[ev.fecha] = porDia[ev.fecha] || []).push({ ...ev, _evento: true }));
     let html = ['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM'].map(d => `<div class="dsem">${d}</div>`).join('');
     for (let i = 0; i < celdas; i++) {
       const d = new Date(inicio); d.setDate(inicio.getDate() + i);
       const iso = d.toLocaleDateString('sv-SE');
       const lista = (porDia[iso] || []).sort((a, b) => (a.hora || '99').localeCompare(b.hora || '99'));
       const cls = ['dia-c', d.getMonth() !== m ? 'otro' : '', iso === hoy ? 'hoy' : '', iso < hoy ? 'pasado' : '', iso === selDia ? 'sel' : ''].join(' ');
-      const evs = lista.slice(0, 3).map(p => { const atr = abierto(p) && p.fecha < hoy; return `<div class="ev ${claseEstado(p.estado)} ${atr ? 'atr' : ''}" title="${esc(p.cliente)} · ${p.lineas.map(l => l.cantidad + ' × ' + esc(l.nombre)).join(', ')}">${p.hora ? p.hora + ' ' : ''}${esc(p.cliente)}</div>`; }).join('');
-      const puntos = lista.slice(0, 6).map(p => `<i class="${abierto(p) ? (p.fecha < hoy ? 'atr' : '') : 'hecho'}"></i>`).join('');
+      const evs = lista.slice(0, 3).map(p => { if (p._evento) return `<div class="ev evt" title="${esc(p.titulo)}${p.notas ? ' · ' + esc(p.notas) : ''}">★ ${p.hora ? p.hora + ' ' : ''}${esc(p.titulo)}</div>`; const atr = abierto(p) && p.fecha < hoy; return `<div class="ev ${claseEstado(p.estado)} ${atr ? 'atr' : ''}" title="${esc(p.cliente)} · ${p.lineas.map(l => l.cantidad + ' × ' + esc(l.nombre)).join(', ')}">${p.hora ? p.hora + ' ' : ''}${esc(p.cliente)}</div>`; }).join('');
+      const puntos = lista.slice(0, 6).map(p => p._evento ? '<i class="evt"></i>' : `<i class="${abierto(p) ? (p.fecha < hoy ? 'atr' : '') : 'hecho'}"></i>`).join('');
       html += `<div class="${cls}" onclick="elegirDia('${iso}')"><div class="num-d">${d.getDate()}</div>${evs}${lista.length > 3 ? `<div class="mas">+${lista.length - 3} más</div>` : ''}<div class="puntos">${puntos}</div></div>`;
     }
     $('cal').innerHTML = html;
@@ -427,31 +521,22 @@
     if (selDia === iso) { quitarDia(); return; }
     selDia = iso; filtro = 'dia';
     const d = new Date(iso + 'T12:00:00');
-    $('diaSel').style.display = 'flex';
-    $('agendarDia').style.display = iso >= hoyISO() ? '' : 'none';
     $('chipDia').style.display = ''; $('chipDia').textContent = `${d.getDate()} ${MESES[d.getMonth()].toLowerCase()} ✕`;
     document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c.id === 'chipDia'));
     render();
   };
-  function pintarDiaSel() {
-    if (!selDia) return;
-    const d = new Date(selDia + 'T12:00:00');
-    const n = pedidos.filter(p => p.fecha === selDia && p.estado !== 'Cancelado').length;
-    $('diaSelTxt').innerHTML = `<b>${DIAS_L[d.getDay()][0].toUpperCase() + DIAS_L[d.getDay()].slice(1)} ${fechaLarga(selDia)}</b> · ${n ? n + (n === 1 ? ' pedido' : ' pedidos') : 'sin pedidos'}`;
-  }
   function quitarDia() {
-    selDia = null; $('diaSel').style.display = 'none'; $('chipDia').style.display = 'none';
+    selDia = null; $('chipDia').style.display = 'none';
     if (filtro === 'dia') { filtro = 'proximos'; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c.dataset.f === 'proximos')); }
     render();
   }
-  $('verTodos').addEventListener('click', quitarDia);
   $('mesAnt').addEventListener('click', () => { mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth() - 1, 1); renderCal(); });
   $('mesSig').addEventListener('click', () => { mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth() + 1, 1); renderCal(); });
   $('mesHoy').addEventListener('click', () => { const h = new Date(); mesVista = new Date(h.getFullYear(), h.getMonth(), 1); renderCal(); });
   $('filtros').addEventListener('click', e => {
     const b = e.target.closest('.chip'); if (!b) return;
     if (b.id === 'chipDia') { quitarDia(); return; }
-    if (selDia) { selDia = null; $('diaSel').style.display = 'none'; $('chipDia').style.display = 'none'; }
+    if (selDia) { selDia = null; $('chipDia').style.display = 'none'; }
     filtro = b.dataset.f;
     document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c === b));
     render();
@@ -508,6 +593,7 @@
   escuchar('ingredientes', d => { ingredientes = d; });
   escuchar('stock', d => { stock = {}; d.forEach(x => { stock[x.id] = Number(x.cantidad) || 0; }); });
   escuchar('pedidos', d => { pedidos = d; cargado = true; render(); });
+  escuchar('eventos', d => { eventos = d; render(); });
 </script>
 </body>
 </html>
