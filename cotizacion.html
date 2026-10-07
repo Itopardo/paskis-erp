@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotización - Paskis Cookies & Cake</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; padding: 20px 12px 40px; }
+    .barra { max-width: 800px; margin: 0 auto 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .barra a { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .barra button { background: #fff; color: #e8508a; border: 0; border-radius: 10px; padding: 11px 18px; font-weight: 800; font-size: 14px; letter-spacing: 1px; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .hoja { background: #fff; max-width: 800px; margin: 0 auto; border-radius: 14px; padding: 40px 44px; box-shadow: 0 10px 30px rgba(0,0,0,.15); }
+    .cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; border-bottom: 3px solid #ff82b0; padding-bottom: 18px; margin-bottom: 22px; }
+    .marca { display: flex; align-items: center; gap: 16px; }
+    .marca .logo { background: #ff82b0; border-radius: 14px; width: 150px; height: 92px; overflow: hidden; position: relative; flex-shrink: 0; }
+    .marca img { position: absolute; height: 109px; left: -93px; top: -12px; }
+    .marca .nom { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #e8508a; }
+    .marca .extra { font-size: 12px; color: #8a5a70; margin-top: 2px; }
+    .doc { text-align: right; }
+    .doc .t { font-size: 22px; font-weight: 800; letter-spacing: 3px; color: #e8508a; }
+    .doc .n { font-size: 15px; font-weight: 700; margin-top: 2px; }
+    .doc .f { font-size: 12px; color: #8a5a70; margin-top: 6px; line-height: 1.6; }
+    .cliente { background: #fff5f9; border-radius: 10px; padding: 14px 16px; margin-bottom: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 14px; }
+    .cliente .et { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #e8508a; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #fff; background: #e8508a; padding: 9px 10px; }
+    th:first-child { border-radius: 8px 0 0 8px; } th:last-child { border-radius: 0 8px 8px 0; }
+    td { padding: 10px; border-bottom: 1px solid #fbe3ec; }
+    .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .totales { margin-left: auto; margin-top: 14px; width: 280px; font-size: 14px; }
+    .totales div { display: flex; justify-content: space-between; padding: 5px 10px; }
+    .totales .gran { background: #e8508a; color: #fff; border-radius: 8px; font-weight: 800; font-size: 17px; padding: 9px 10px; margin-top: 4px; }
+    .notas { margin-top: 26px; font-size: 13px; color: #6b4558; white-space: pre-wrap; border-left: 3px solid #ff82b0; padding: 4px 0 4px 12px; }
+    .notas b { display: block; font-size: 10px; letter-spacing: 1.5px; color: #e8508a; margin-bottom: 4px; }
+    .pie { margin-top: 34px; text-align: center; font-size: 12px; color: #b07790; }
+    .error { text-align: center; padding: 40px; color: #b07790; }
+    body.cargando .hoja { visibility: hidden; }
+    @media (max-width: 600px) { .hoja { padding: 22px 16px; } .cabecera { flex-direction: column; } .doc { text-align: left; } .cliente { grid-template-columns: 1fr; } .totales { width: 100%; } }
+    @page { size: A4; margin: 14mm; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .barra { display: none; }
+      .hoja { box-shadow: none; border-radius: 0; padding: 0; max-width: none; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body class="cargando">
+  <div class="barra">
+    <a href="cotizaciones.html">← Cotizaciones</a>
+    <button onclick="window.print()">🖨️ IMPRIMIR / GUARDAR PDF</button>
+  </div>
+  <div class="hoja" id="hoja"></div>
+<script type="module">
+  import { requerirSesion, obtener } from './datos.js';
+  // Datos del negocio que salen en la cotización (agregar RUT, dirección, teléfono, Instagram cuando se tengan)
+  const NEGOCIO = { nombre: 'PASKIS COOKIES & CAKE', lineas: [] };
+  const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fechaCL = iso => { const [a, m, d] = iso.split('-'); return `${d}-${m}-${a}`; };
+
+  await requerirSesion();
+  const params = new URLSearchParams(location.search);
+  const c = await obtener('cotizaciones', params.get('id') || '-');
+  document.body.classList.remove('cargando');
+  if (!c) {
+    document.getElementById('hoja').innerHTML = '<div class="error">No se encontró la cotización.</div>';
+  } else {
+    const num = String(c.numero).padStart(4, '0');
+    document.title = `Cotizacion ${num} - ${c.cliente} - Paskis`;
+    document.getElementById('hoja').innerHTML = `
+      <div class="cabecera">
+        <div class="marca">
+          <div class="logo"><img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis"></div>
+          <div><div class="nom">${NEGOCIO.nombre}</div>${NEGOCIO.lineas.map(x => `<div class="extra">${esc(x)}</div>`).join('')}</div>
+        </div>
+        <div class="doc">
+          <div class="t">COTIZACIÓN</div>
+          <div class="n">N° ${num}</div>
+          <div class="f">Fecha: ${fechaCL(c.fecha)}<br>Válida hasta: ${fechaCL(c.validaHasta)}</div>
+        </div>
+      </div>
+      <div class="cliente">
+        <div><div class="et">CLIENTE</div>${esc(c.cliente)}</div>
+        ${c.fechaEvento ? `<div><div class="et">FECHA DE ENTREGA</div>${fechaCL(c.fechaEvento)}</div>` : '<div></div>'}
+        ${c.telefono ? `<div><div class="et">TELÉFONO</div>${esc(c.telefono)}</div>` : ''}
+        ${c.correo ? `<div><div class="et">CORREO</div>${esc(c.correo)}</div>` : ''}
+      </div>
+      <table>
+        <thead><tr><th>DESCRIPCIÓN</th><th class="num">CANT.</th><th class="num">PRECIO UNIT.</th><th class="num">SUBTOTAL</th></tr></thead>
+        <tbody>${c.lineas.map(l => `<tr><td>${esc(l.nombre)}</td><td class="num">${l.cantidad}</td><td class="num">${clp(l.precio)}</td><td class="num">${clp(l.cantidad * l.precio)}</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="totales">
+        <div><span>Subtotal</span><span>${clp(c.subtotal)}</span></div>
+        ${c.descuento ? `<div><span>Descuento</span><span>−${clp(c.descuento)}</span></div>` : ''}
+        ${c.despacho ? `<div><span>Despacho</span><span>${clp(c.despacho)}</span></div>` : ''}
+        <div class="gran"><span>TOTAL</span><span>${clp(c.total)}</span></div>
+      </div>
+      ${c.notas ? `<div class="notas"><b>CONDICIONES</b>${esc(c.notas)}</div>` : ''}
+      <div class="pie">¡Gracias por preferirnos! · Paskis Cookies & Cake</div>`;
+    if (params.get('imprimir') === '1') setTimeout(() => window.print(), 600);
+  }
+</script>
+</body>
+</html>
