@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paskis ERP - Cotizaciones</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ff82b0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #4a2236; padding: 24px 16px 48px; }
+    .top { max-width: 960px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .top img { height: 70px; }
+    .volver { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; min-width: 60px; }
+    a.logo-link { display: inline-block; line-height: 0; transition: transform .15s; }
+    a.logo-link:hover { transform: scale(1.04); }
+    h1 { color: #fff; text-align: center; letter-spacing: 3px; font-size: 24px; margin-bottom: 20px; }
+    h2 { color: #e8508a; font-size: 14px; letter-spacing: 1.5px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .card { background: #fff; border-radius: 18px; padding: 20px; max-width: 960px; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    .fila { display: grid; gap: 12px; margin-bottom: 14px; }
+    .f1 { grid-template-columns: 2fr 1.2fr 1fr .8fr; }
+    .f2 { grid-template-columns: 1fr 3fr; }
+    .f3 { grid-template-columns: 1fr 1fr 2fr; }
+    @media (max-width: 700px) { .f1, .f2, .f3 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .f1 label:first-child, .f2 label:last-child, .f3 label:last-child { grid-column: 1 / -1; } }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #e8508a; }
+    label small { font-weight: 500; letter-spacing: 0; color: #b07790; }
+    input, select, textarea { width: 100%; min-width: 0; border: 1.5px solid #f5c2d6; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #4a2236; outline: none; background: #fff; font-family: inherit; }
+    textarea { resize: vertical; min-height: 44px; }
+    input:focus, select:focus, textarea:focus { border-color: #e8508a; }
+    input:disabled { background: #fbf3f6; color: #b07790; }
+    button { border: 0; cursor: pointer; font-weight: 700; border-radius: 10px; font-family: inherit; }
+    .btn { background: #e8508a; color: #fff; padding: 12px 22px; font-size: 14px; letter-spacing: 1px; }
+    .btn:hover { background: #d43f78; }
+    .btn:disabled { opacity: .6; cursor: wait; }
+    .btn2 { background: #f5e1ea; color: #a8325f; padding: 10px 16px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 1px; color: #e8508a; padding: 8px; border-bottom: 2px solid #f5c2d6; white-space: nowrap; }
+    td { padding: 10px 8px; border-bottom: 1px solid #fbe3ec; vertical-align: middle; }
+    .items td { padding: 6px 4px; border: 0; }
+    .items th { padding: 6px 4px; }
+    .items input, .items select { padding: 9px 10px; font-size: 14px; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    @media (max-width: 640px) {
+      .items thead { display: none; }
+      .items tr { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto auto; gap: 8px; align-items: end; padding: 10px 0; border-bottom: 1px solid #fbe3ec; }
+      .items td { padding: 0; }
+      .items td:first-child { grid-column: 1 / -1; }
+      .items td[data-l]::before { content: attr(data-l); display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #e8508a; margin-bottom: 4px; }
+      .items td.num { padding-bottom: 10px; }
+    }
+    .quitar { background: none; color: #c9a3b5; font-size: 18px; padding: 4px 8px; }
+    .quitar:hover { color: #c0392b; }
+    .pie { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 2px solid #f5c2d6; }
+    .montos { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; font-size: 14px; }
+    .montos b { font-size: 18px; color: #e8508a; }
+    .montos .abono { width: 120px; }
+    .acciones-form { display: flex; gap: 8px; }
+    .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+    .chip { background: #fde4ee; color: #a8325f; padding: 8px 14px; border-radius: 999px; font-size: 13px; }
+    .chip.activo { background: #e8508a; color: #fff; }
+    .filtros input { flex: 1; min-width: 160px; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .kpi { background: #fff5f9; border-radius: 12px; padding: 12px 14px; }
+    .kpi div { font-size: 11px; letter-spacing: 1px; color: #b07790; font-weight: 700; }
+    .kpi b { font-size: 20px; color: #4a2236; font-variant-numeric: tabular-nums; }
+    @media (max-width: 640px) { .kpis { grid-template-columns: 1fr; } }
+    /* Tarjetas de pedido */
+    .lista { display: flex; flex-direction: column; gap: 12px; }
+    .ped { border: 1.5px solid #f5c2d6; border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: 110px 1fr auto; gap: 14px; align-items: start; }
+    .ped.atrasado { border-color: #e57373; background: #fff6f6; }
+    .ped.hecho { opacity: .65; }
+    .fecha { text-align: center; background: #fde4ee; border-radius: 12px; padding: 8px 4px; }
+    .fecha .dia { font-size: 26px; font-weight: 800; color: #e8508a; line-height: 1; }
+    .fecha .mes { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #a8325f; }
+    .fecha .rel { font-size: 11px; color: #b07790; margin-top: 4px; }
+    .fecha .hora { font-size: 12px; font-weight: 700; color: #4a2236; margin-top: 2px; }
+    .info .cli { font-weight: 800; font-size: 16px; }
+    .info .meta { font-size: 13px; color: #8a5a70; margin-top: 2px; }
+    .info .meta a { color: #25a35a; text-decoration: none; font-weight: 700; }
+    .info .prods { font-size: 14px; margin-top: 8px; }
+    .info .nota { font-size: 13px; background: #fff8e1; color: #7a5b00; border-radius: 8px; padding: 6px 10px; margin-top: 8px; }
+    .lado { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 170px; }
+    .lado .tot { font-size: 18px; font-weight: 800; }
+    .lado .saldo { font-size: 12px; color: #8a5a70; text-align: right; }
+    .lado .saldo b { color: #c0392b; }
+    .estado { border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; border: 0; width: auto; cursor: pointer; }
+    .e-Pendiente { background: #fff3cd; color: #8a6d00; }
+    .e-Enpreparacion { background: #e3f2fd; color: #1565c0; }
+    .e-Listo { background: #e8f5e9; color: #2e7d32; }
+    .e-Entregado { background: #eceff1; color: #546e7a; }
+    .e-Cancelado { background: #fdecea; color: #c0392b; }
+    .botones { display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
+    .ico { background: none; padding: 4px 6px; color: #e8508a; font-size: 13px; text-decoration: none; font-weight: 700; }
+    .ico:hover { text-decoration: underline; }
+    .entregar { background: #e8508a; color: #fff; padding: 7px 12px; border-radius: 999px; font-size: 12px; }
+    .entregar:hover { background: #d43f78; }
+    .ped { grid-template-columns: 110px 1fr auto; }
+    .fecha .num-c { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #a8325f; }
+    .e-Pendiente { background: #fff3cd; color: #8a6d00; }
+    .e-Enviada { background: #e3f2fd; color: #1565c0; }
+    .e-Aceptada { background: #e8f5e9; color: #2e7d32; }
+    .e-Rechazada { background: #fdecea; color: #c0392b; }
+    .tag-venc { display: inline-block; background: #9e9e9e; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .5px; padding: 2px 6px; border-radius: 6px; margin-left: 6px; vertical-align: middle; }
+    .ped.vencida { opacity: .7; }
+    .wa { color: #25a35a !important; }
+    .vacio { text-align: center; padding: 24px; color: #b07790; }
+    .tabla-wrap { overflow-x: auto; }
+    body.cargando { visibility: hidden; }
+    .cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .cab h2 { margin: 0; }
+    .fc1 { grid-template-columns: 2fr 1.2fr 1.5fr; }
+    .fc2 { grid-template-columns: 1fr 1fr 1fr; }
+    .fc3 { grid-template-columns: 1fr 1fr 2.4fr; }
+    @media (max-width: 700px) { .fc1, .fc2, .fc3 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .fc1 label:first-child, .fc3 label:last-child { grid-column: 1 / -1; } .fc2 label:last-child { grid-column: 1 / -1; } }
+    .resumen { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 13px; color: #8a5a70; }
+    .resumen b { color: #4a2236; }
+    .resumen .tot { font-size: 20px; font-weight: 800; color: #e8508a; }
+    .ok { background: #e8f5e9; color: #2e7d32; border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 12px; display: none; }
+    /* Modal del formulario */
+    .modal { position: fixed; inset: 0; background: rgba(74,34,54,.55); z-index: 50; display: none; overflow-y: auto; padding: 24px 12px; }
+    .modal.abierto { display: block; }
+    .modal .card { margin: 0 auto; animation: subir .2s ease-out; }
+    @keyframes subir { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .cerrar-x { background: none; color: #c9a3b5; font-size: 26px; line-height: 1; padding: 0 4px; }
+    .cerrar-x:hover { color: #e8508a; }
+    body.modal-on { overflow: hidden; }
+  </style>
+</head>
+<body class="cargando">
+  <div class="top">
+    <a class="volver" href="menu.html">← Menú</a>
+    <a href="menu.html" class="logo-link" title="Ir al menú principal"><img src="Dise%C3%B1o%20sin%20t%C3%ADtulo%20(17)%20(1).png" alt="Paskis"></a>
+    <span style="min-width:60px"></span>
+  </div>
+  <h1>COTIZACIONES</h1>
+
+  <div class="card">
+    <div class="cab">
+      <h2>COTIZACIONES</h2>
+      <button type="button" class="btn" id="nueva">+ NUEVA COTIZACIÓN</button>
+    </div>
+    <div class="ok" id="ok"></div>
+    <div class="filtros" id="filtros">
+      <button class="chip activo" data-f="abiertas">Pendientes</button>
+      <button class="chip" data-f="Aceptada">Aceptadas</button>
+      <button class="chip" data-f="Rechazada">Rechazadas</button>
+      <button class="chip" data-f="todas">Todas</button>
+      <input id="buscar" placeholder="Buscar cliente, N° o producto...">
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div>PENDIENTES</div><b id="kPend">0</b></div>
+      <div class="kpi"><div>MONTO EN COTIZACIONES PENDIENTES</div><b id="kMonto">$0</b></div>
+      <div class="kpi"><div>ACEPTADAS ESTE MES</div><b id="kAcep">0</b></div>
+    </div>
+    <div class="lista" id="lista"></div>
+  </div>
+
+  <div class="modal" id="modal">
+  <div class="card">
+    <h2><span id="tituloForm">NUEVA COTIZACIÓN</span><button type="button" class="cerrar-x" id="cerrarX" title="Cerrar">×</button></h2>
+    <div class="fila fc1">
+      <label>CLIENTE <input id="cliente" placeholder="Ej: María González / Empresa XYZ"></label>
+      <label><span>TELÉFONO <small>(opcional)</small></span><input id="telefono" type="tel" placeholder="+56 9 ..."></label>
+      <label><span>CORREO <small>(opcional)</small></span><input id="correo" type="email" placeholder="cliente@correo.cl"></label>
+    </div>
+    <div class="fila fc2">
+      <label>FECHA <input id="fecha" type="date"></label>
+      <label>VÁLIDA POR
+        <select id="validez"><option value="3">3 días</option><option value="7" selected>7 días</option><option value="15">15 días</option><option value="30">30 días</option></select>
+      </label>
+      <label><span>FECHA DEL EVENTO / ENTREGA <small>(opcional)</small></span><input id="fechaEvento" type="date"></label>
+    </div>
+    <div class="tabla-wrap">
+      <table class="items">
+        <thead><tr><th style="width:44%">PRODUCTO O DESCRIPCIÓN</th><th style="width:13%">CANTIDAD</th><th style="width:18%">PRECIO UNIT.</th><th class="num" style="width:19%">SUBTOTAL</th><th></th></tr></thead>
+        <tbody id="items"></tbody>
+      </table>
+    </div>
+    <datalist id="listaProd"></datalist>
+    <button type="button" class="btn2" id="agregar" style="margin-top:10px">+ Agregar línea</button>
+    <div class="fila fc3" style="margin-top:14px">
+      <label><span>DESCUENTO <small>($)</small></span><input id="descuento" type="number" min="0" step="1" placeholder="$ 0"></label>
+      <label><span>DESPACHO <small>($)</small></span><input id="despacho" type="number" min="0" step="1" placeholder="$ 0"></label>
+      <label><span>CONDICIONES / NOTAS <small>(salen en la cotización)</small></span><textarea id="notas" rows="2"></textarea></label>
+    </div>
+    <div class="pie">
+      <div class="resumen">
+        <div>Subtotal <b id="rSub">$0</b></div>
+        <div id="rDesc"></div>
+        <div id="rDesp"></div>
+        <div class="tot">TOTAL <span id="total">$0</span></div>
+      </div>
+      <div class="acciones-form">
+        <button type="button" class="btn2" id="cancelar">Cancelar</button>
+        <button type="button" class="btn" id="guardar">GUARDAR COTIZACIÓN</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+<script type="module">
+  import { requerirSesion, escuchar, guardar, borrar as borrarDoc, nuevoId } from './datos.js';
+  const $ = id => document.getElementById(id);
+  const clp = n => '$' + Math.round(n).toLocaleString('es-CL');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const hoyISO = () => new Date().toLocaleDateString('sv-SE');
+  const sumarDias = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv-SE'); };
+  const fechaCL = iso => { const [a, m, d] = iso.split('-'); return `${d}-${m}-${a}`; };
+  const MESES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  const ESTADOS = ['Pendiente', 'Enviada', 'Aceptada', 'Rechazada'];
+  const NOTAS_DEFECTO = 'Para reservar se solicita un abono del 50%. Precios en pesos chilenos.';
+  const numTxt = n => String(n).padStart(4, '0');
+
+  let productos = [], cotizaciones = [], cargado = false, usuario = null;
+  let items = [], editando = null, filtro = 'abiertas';
+
+  // ---------- Formulario ----------
+  const nuevaLinea = () => ({ productoId: '', nombre: '', cantidad: 1, precio: '' });
+  function renderItems() {
+    $('items').innerHTML = items.map((it, i) => `<tr>
+      <td><input list="listaProd" value="${esc(it.nombre)}" placeholder="Elige un producto o escribe una descripción" oninput="describir(${i},this.value)"></td>
+      <td data-l="CANTIDAD"><input type="number" min="1" step="1" value="${it.cantidad}" oninput="cambiar(${i},'cantidad',this.value)"></td>
+      <td data-l="PRECIO UNIT."><input type="number" min="0" step="1" value="${it.precio}" placeholder="$" id="pr_${i}" oninput="cambiar(${i},'precio',this.value)"></td>
+      <td class="num" id="sub_${i}"></td>
+      <td><button type="button" class="quitar" title="Quitar" onclick="quitarItem(${i})">×</button></td>
+    </tr>`).join('');
+    items.forEach((_, i) => pintarSub(i));
+    totales();
+  }
+  const pintarSub = i => { $('sub_' + i).textContent = clp((Number(items[i].cantidad) || 0) * (Number(items[i].precio) || 0)); };
+  function totales() {
+    const sub = items.reduce((s, it) => s + (Number(it.cantidad) || 0) * (Number(it.precio) || 0), 0);
+    const desc = Math.min(sub, Number($('descuento').value) || 0), desp = Number($('despacho').value) || 0;
+    $('rSub').textContent = clp(sub);
+    $('rDesc').innerHTML = desc ? `Descuento <b>−${clp(desc)}</b>` : '';
+    $('rDesp').innerHTML = desp ? `Despacho <b>${clp(desp)}</b>` : '';
+    $('total').textContent = clp(sub - desc + desp);
+    return { sub, desc, desp, total: sub - desc + desp };
+  }
+  window.describir = (i, v) => {
+    items[i].nombre = v;
+    const p = productos.find(x => x.nombre.trim().toLowerCase() === v.trim().toLowerCase());
+    if (p) { items[i].productoId = p.id; items[i].precio = p.valor; $('pr_' + i).value = p.valor; }
+    else items[i].productoId = '';
+    pintarSub(i); totales();
+  };
+  window.cambiar = (i, campo, v) => { items[i][campo] = v; pintarSub(i); totales(); };
+  window.quitarItem = i => { items.splice(i, 1); if (!items.length) items.push(nuevaLinea()); renderItems(); };
+  $('agregar').addEventListener('click', () => { items.push(nuevaLinea()); renderItems(); });
+  $('descuento').addEventListener('input', totales);
+  $('despacho').addEventListener('input', totales);
+
+  function limpiar() {
+    editando = null; items = [nuevaLinea()];
+    ['cliente', 'telefono', 'correo', 'fechaEvento', 'descuento', 'despacho'].forEach(id => $(id).value = '');
+    $('fecha').value = hoyISO(); $('validez').value = '7'; $('notas').value = NOTAS_DEFECTO;
+    $('tituloForm').textContent = 'NUEVA COTIZACIÓN'; $('guardar').textContent = 'GUARDAR COTIZACIÓN';
+    renderItems();
+  }
+  function abrirModal() { $('modal').classList.add('abierto'); document.body.classList.add('modal-on'); $('modal').scrollTop = 0; setTimeout(() => $('cliente').focus(), 50); }
+  function cerrarModal() { $('modal').classList.remove('abierto'); document.body.classList.remove('modal-on'); limpiar(); }
+  $('nueva').addEventListener('click', () => { limpiar(); abrirModal(); });
+  $('cancelar').addEventListener('click', cerrarModal);
+  $('cerrarX').addEventListener('click', cerrarModal);
+  $('modal').addEventListener('mousedown', e => { if (e.target === $('modal')) cerrarModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('modal').classList.contains('abierto')) cerrarModal(); });
+
+  $('guardar').addEventListener('click', async () => {
+    const cliente = $('cliente').value.trim();
+    const validos = items.filter(it => it.nombre.trim() && Number(it.cantidad) > 0);
+    if (!cliente) { alert('Ingresa el nombre del cliente.'); $('cliente').focus(); return; }
+    if (!$('fecha').value) { alert('Ingresa la fecha de la cotización.'); return; }
+    if (!validos.length) { alert('Agrega al menos un producto o descripción.'); return; }
+    const lineas = validos.map(it => ({ productoId: it.productoId || '', nombre: it.nombre.trim(), cantidad: Math.round(Number(it.cantidad)), precio: Number(it.precio) || 0 }));
+    const subtotal = lineas.reduce((s, l) => s + l.cantidad * l.precio, 0);
+    const descuento = Math.min(subtotal, Number($('descuento').value) || 0), despacho = Number($('despacho').value) || 0;
+    const prev = editando ? cotizaciones.find(x => x.id === editando) : null;
+    const numero = prev ? prev.numero : cotizaciones.reduce((m, c) => Math.max(m, c.numero || 0), 0) + 1;
+    const cot = {
+      ...(prev || { id: nuevoId(), estado: 'Pendiente', creado: Date.now(), creadoPor: usuario ? usuario.email : '' }),
+      numero, cliente, telefono: $('telefono').value.trim(), correo: $('correo').value.trim(),
+      fecha: $('fecha').value, validaHasta: sumarDias($('fecha').value, Number($('validez').value)), dias: Number($('validez').value),
+      fechaEvento: $('fechaEvento').value, lineas, subtotal, descuento, despacho, total: subtotal - descuento + despacho,
+      notas: $('notas').value.trim()
+    };
+    $('guardar').disabled = true;
+    try {
+      await guardar('cotizaciones', cot);
+      $('ok').style.display = 'block';
+      $('ok').innerHTML = `${prev ? 'Cotización actualizada' : 'Cotización N° ' + numTxt(numero) + ' guardada'} · <a href="cotizacion.html?id=${cot.id}" target="_blank" style="color:#2e7d32;font-weight:700">Ver / imprimir PDF</a>`;
+      clearTimeout(window._okT); window._okT = setTimeout(() => { $('ok').style.display = 'none'; }, 15000);
+      cerrarModal();
+    } finally { $('guardar').disabled = false; }
+  });
+
+  // ---------- Lista ----------
+  const vencida = c => (c.estado === 'Pendiente' || c.estado === 'Enviada') && c.validaHasta < hoyISO();
+  function pasaFiltro(c) {
+    if (filtro === 'abiertas') return c.estado === 'Pendiente' || c.estado === 'Enviada';
+    if (filtro === 'todas') return true;
+    return c.estado === filtro;
+  }
+  const waLink = tel => { let n = tel.replace(/\D/g, ''); if (n.length === 9) n = '56' + n; return n.length >= 9 ? n : null; };
+  function textoWA(c) {
+    let t = `Hola ${c.cliente}! Te envío la cotización N° ${numTxt(c.numero)} de Paskis Cookies & Cake:\n\n`;
+    t += c.lineas.map(l => `• ${l.cantidad} × ${l.nombre}: ${clp(l.cantidad * l.precio)}`).join('\n');
+    if (c.descuento) t += `\nDescuento: −${clp(c.descuento)}`;
+    if (c.despacho) t += `\nDespacho: ${clp(c.despacho)}`;
+    t += `\n\n*Total: ${clp(c.total)}*`;
+    if (c.fechaEvento) t += `\nFecha de entrega: ${fechaCL(c.fechaEvento)}`;
+    t += `\nVálida hasta el ${fechaCL(c.validaHasta)}.`;
+    if (c.notas) t += `\n\n${c.notas}`;
+    return t;
+  }
+  function render() {
+    if (!cargado) { $('lista').innerHTML = '<div class="vacio">Cargando...</div>'; return; }
+    const q = $('buscar').value.trim().toLowerCase();
+    const filas = cotizaciones.filter(c => pasaFiltro(c) && (!q || c.cliente.toLowerCase().includes(q) || numTxt(c.numero).includes(q) || c.lineas.some(l => l.nombre.toLowerCase().includes(q))));
+    $('lista').innerHTML = filas.length ? filas.map(c => {
+      const [a, m, d] = c.fecha.split('-');
+      const venc = vencida(c);
+      const tel = c.telefono ? waLink(c.telefono) : null;
+      return `<div class="ped ${venc ? 'vencida' : ''}">
+        <div class="fecha"><div class="num-c">N° ${numTxt(c.numero)}</div><div class="dia">${Number(d)}</div><div class="mes">${MESES[Number(m) - 1]} ${a.slice(2)}</div></div>
+        <div class="info">
+          <div class="cli">${esc(c.cliente)}${venc ? '<span class="tag-venc">VENCIDA</span>' : ''}</div>
+          <div class="meta">Válida hasta ${fechaCL(c.validaHasta)}${c.fechaEvento ? ' · Entrega ' + fechaCL(c.fechaEvento) : ''}${c.telefono ? ' · ' + esc(c.telefono) : ''}</div>
+          <div class="prods">${c.lineas.map(l => `${l.cantidad} × ${esc(l.nombre)}`).join('<br>')}</div>
+        </div>
+        <div class="lado">
+          <select class="estado e-${c.estado}" onchange="cambiarEstado('${c.id}', this.value)">${ESTADOS.map(e => `<option ${e === c.estado ? 'selected' : ''}>${e}</option>`).join('')}</select>
+          <div class="tot">${clp(c.total)}</div>
+          <div class="botones">
+            <a class="ico" href="cotizacion.html?id=${c.id}" target="_blank">Ver / PDF</a>
+            <a class="ico wa" href="https://wa.me/${tel || ''}?text=${encodeURIComponent(textoWA(c))}" target="_blank" onclick="marcarEnviada('${c.id}')">WhatsApp</a>
+            <button class="ico" onclick="editar('${c.id}')">Editar</button>
+            <button class="ico" onclick="duplicar('${c.id}')">Duplicar</button>
+            <button class="ico" onclick="eliminar('${c.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') : `<div class="vacio">${cotizaciones.length ? 'No hay cotizaciones en esta vista.' : 'Aún no hay cotizaciones.'}</div>`;
+    const abiertas = cotizaciones.filter(c => (c.estado === 'Pendiente' || c.estado === 'Enviada') && !vencida(c));
+    $('kPend').textContent = abiertas.length;
+    $('kMonto').textContent = clp(abiertas.reduce((s, c) => s + c.total, 0));
+    const mes = hoyISO().slice(0, 7);
+    $('kAcep').textContent = cotizaciones.filter(c => c.estado === 'Aceptada' && c.fecha.slice(0, 7) === mes).length;
+  }
+  $('filtros').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    filtro = b.dataset.f;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c === b));
+    render();
+  });
+  $('buscar').addEventListener('input', render);
+
+  window.cambiarEstado = async (id, estado) => { const c = cotizaciones.find(x => x.id === id); if (c) await guardar('cotizaciones', { ...c, estado }); };
+  window.marcarEnviada = id => { const c = cotizaciones.find(x => x.id === id); if (c && c.estado === 'Pendiente') guardar('cotizaciones', { ...c, estado: 'Enviada' }); };
+  function cargarForm(c) {
+    $('cliente').value = c.cliente; $('telefono').value = c.telefono || ''; $('correo').value = c.correo || '';
+    $('validez').value = String(c.dias || 7); $('fechaEvento').value = c.fechaEvento || '';
+    $('descuento').value = c.descuento || ''; $('despacho').value = c.despacho || ''; $('notas').value = c.notas || '';
+    items = c.lineas.map(l => ({ ...l }));
+    renderItems();
+  }
+  window.editar = id => {
+    const c = cotizaciones.find(x => x.id === id); if (!c) return;
+    limpiar(); editando = id; cargarForm(c); $('fecha').value = c.fecha;
+    $('tituloForm').textContent = 'EDITAR COTIZACIÓN N° ' + numTxt(c.numero); $('guardar').textContent = 'GUARDAR CAMBIOS';
+    abrirModal();
+  };
+  window.duplicar = id => {
+    const c = cotizaciones.find(x => x.id === id); if (!c) return;
+    limpiar(); cargarForm(c); $('fechaEvento').value = '';
+    $('tituloForm').textContent = 'NUEVA COTIZACIÓN (copia de N° ' + numTxt(c.numero) + ')';
+    abrirModal();
+  };
+  window.eliminar = async id => {
+    const c = cotizaciones.find(x => x.id === id); if (!c) return;
+    if (!confirm(`¿Eliminar la cotización N° ${numTxt(c.numero)} de ${c.cliente}?`)) return;
+    await borrarDoc('cotizaciones', id);
+  };
+
+  // ---------- Carga ----------
+  usuario = await requerirSesion();
+  document.body.classList.remove('cargando');
+  limpiar(); render();
+  escuchar('productos', d => {
+    productos = d;
+    $('listaProd').innerHTML = [...d].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map(p => `<option value="${esc(p.nombre)}">${clp(p.valor)}</option>`).join('');
+  });
+  escuchar('cotizaciones', d => { cotizaciones = d.sort((a, b) => (b.numero || 0) - (a.numero || 0)); cargado = true; render(); });
+</script>
+</body>
+</html>
