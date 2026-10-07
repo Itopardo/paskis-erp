@@ -206,7 +206,7 @@
   const fechaCL = iso => { const [a, m, d] = iso.split('-'); return `${d}-${m}-${a}`; };
   const MESES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
   const ESTADOS = ['Pendiente', 'Enviada', 'Aceptada', 'Rechazada'];
-  const NOTAS_DEFECTO = 'Para reservar se solicita un abono del 50%. Precios en pesos chilenos.';
+  const NOTAS_DEFECTO = 'Para reservar se solicita un abono del 50%.';
   const numTxt = n => String(n).padStart(4, '0');
 
   let productos = [], cotizaciones = [], cargado = false, usuario = null;
